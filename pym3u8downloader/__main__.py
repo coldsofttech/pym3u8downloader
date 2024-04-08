@@ -98,6 +98,7 @@ class UtilityClass:
         :return: The content length of the file, or 0 if the file is not found or cannot be accessed.
         :rtype: int
         """
+
         def get_final_url(url: str) -> str:
             """
             Get the final URL after following redirects.
@@ -461,7 +462,7 @@ class M3U8Downloader:
         """
         Concatenates the downloaded video files into a single video file.
         """
-        self._debug_logger.debug(f'Build started') if self._debug else None
+        self._debug_logger.debug('Build started') if self._debug else None
         total_files = len(self._playlist_files)
         completed_files = 0
         playlist_file_path = os.path.join(self._temp_directory_path, 'playlist_files')
@@ -498,8 +499,8 @@ class M3U8Downloader:
 
         if self._debug:
             format_string = (
-                f'%(time)s :: %(logger_name)s :: %(level_name)s :: %(file_name)s :: %(class_name)s'
-                f' :: %(function_name)s :: %(thread_name)s :: %(message)s'
+                '%(time)s :: %(logger_name)s :: %(level_name)s :: %(file_name)s :: %(class_name)s'
+                ' :: %(function_name)s :: %(thread_name)s :: %(message)s'
             )
             formatter = pyloggermanager.formatters.DefaultFormatter(format_str=format_string)
             handler = pyloggermanager.handlers.FileHandler(
@@ -522,7 +523,7 @@ class M3U8Downloader:
         self._debug_logger.debug(f'Temporary Directory Full Path: {self._temp_directory_path}') if self._debug else None
         self._playlist_files = []
 
-        self._debug_logger.debug(f'Creating temporary directory') if self._debug else None
+        self._debug_logger.debug('Creating temporary directory') if self._debug else None
         os.makedirs(self._temp_directory_path, exist_ok=True)
 
     def _download_and_write(self, sequence: int, url: str, files: TextIO) -> None:
@@ -558,7 +559,7 @@ class M3U8Downloader:
         """
         Downloads the video files from the playlist with progress indication.
         """
-        self._debug_logger.debug(f'Download started') if self._debug else None
+        self._debug_logger.debug('Download started') if self._debug else None
         total_files = len(self._playlist_files)
         completed_files = 0
 
@@ -597,7 +598,7 @@ class M3U8Downloader:
             index_file_path = os.path.join(self._temp_directory_path, 'index.m3u8')
             self._debug_logger.debug(f'Index File Path: {index_file_path}') if self._debug else None
             UtilityClass.download_file(self._input_file_path, index_file_path)
-            self._debug_logger.debug(f'Index file downloaded') if self._debug else None
+            self._debug_logger.debug('Index file downloaded') if self._debug else None
             return True
         except requests.RequestException as e:
             self._debug_logger.debug(f'Index file download failed. {e}') if self._debug else None
@@ -630,7 +631,7 @@ class M3U8Downloader:
         :return: The list of video file URLs.
         :rtype: list[str]
         """
-        self._debug_logger.debug(f'Gathering playlist from input file') if self._debug else None
+        self._debug_logger.debug('Gathering playlist from input file') if self._debug else None
         playlist_files: list[str] = []
         with open(os.path.join(self._temp_directory_path, 'index.m3u8'), 'r') as index_file:
             for line in index_file:
@@ -653,7 +654,7 @@ class M3U8Downloader:
         :return: The total size of the playlist files in bytes.
         :rtype: int
         """
-        self._debug_logger.debug(f'Verify started') if self._debug else None
+        self._debug_logger.debug('Verify started') if self._debug else None
         total_files = len(self._playlist_files)
         completed_files = 0
 
@@ -689,7 +690,7 @@ class M3U8Downloader:
         :rtype: bool
         """
         is_master = False
-        self._debug_logger.debug(f'Verifying if input file is master') if self._debug else None
+        self._debug_logger.debug('Verifying if input file is master') if self._debug else None
         with open(os.path.join(self._temp_directory_path, 'index.m3u8'), 'r') as index_file:
             for line in index_file:
                 if line.startswith('#EXT-X-STREAM-INF'):
@@ -703,7 +704,7 @@ class M3U8Downloader:
         """
         Removes the temporary directory used for storing downloaded files.
         """
-        self._debug_logger.debug(f'Cleaning temporary directory') if self._debug else None
+        self._debug_logger.debug('Cleaning temporary directory') if self._debug else None
         shutil.rmtree(self._temp_directory_path)
 
     def _validate(self) -> None:
@@ -711,9 +712,9 @@ class M3U8Downloader:
         Validates the input parameters and conditions before starting the download process.
         """
         if not UtilityClass.is_url(self._input_file_path):
-            raise ValueError(f'input_file_path is not a valid url.')
+            raise ValueError('input_file_path is not a valid url.')
         elif not UtilityClass.is_m3u8_url(self._input_file_path):
-            raise ValueError(f'input_file_path is not a valid m3u8 url.')
+            raise ValueError('input_file_path is not a valid m3u8 url.')
         elif not UtilityClass.is_internet_connected():
             raise M3U8DownloaderError('Internet connection required.')
 
@@ -744,14 +745,14 @@ class M3U8Downloader:
             self._playlist_files = self._get_playlist_files()
 
             if not self._skip_space_check:
-                self._debug_logger.debug(f'Verifying if required space '
-                                         f'is available for download') if self._debug else None
+                self._debug_logger.debug('Verifying if required space '
+                                         'is available for download') if self._debug else None
                 playlist_size = self._get_playlist_size()
                 self._debug_logger.debug(f'Required space: {playlist_size}') if self._debug else None
                 self._check_required_disk_space(playlist_size)
-                self._debug_logger.debug(f'Required space is available') if self._debug else None
+                self._debug_logger.debug('Required space is available') if self._debug else None
             else:
-                self._debug_logger.debug(f'Verification of space required skipped') if self._debug else None
+                self._debug_logger.debug('Verification of space required skipped') if self._debug else None
 
             self._download_files_with_progress()
             self._concatenate_video_files()

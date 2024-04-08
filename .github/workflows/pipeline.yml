@@ -7,7 +7,7 @@ on:
 
 jobs:
   lint:
-    name: Python Linux (PEP8)
+    name: Python Linux (flake8)
     runs-on: ubuntu-latest
 
     steps:
@@ -22,18 +22,11 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install autopep8
+          pip install flake8
 
       - name: Run Lint
-        run: autopep8 --in-place --recursive --verbose .
-        continue-on-error: false
-
-      - name: Upload Report
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: lint-report
-          path: lint-report.txt
+        run: flake8 --verbose --color auto --count --statistics
+        continue-on-error: true
 
   build_and_test:
     name: Build and Test
