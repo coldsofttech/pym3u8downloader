@@ -25,7 +25,7 @@ jobs:
           pip install autopep8
 
       - name: Run Lint
-        run: autopep8 --in-place --recursive .
+        run: autopep8 --in-place --recursive --verbose .
         continue-on-error: false
 
       - name: Upload Report
