@@ -45,10 +45,10 @@ class CommonClass:
     @staticmethod
     def generate_sample_file_paths(same_disk: bool = True, extension: str = 'html'):
         """Returns sample source and destination paths based on the provided same_disk value"""
-        source_dir = os.getcwd()
+        available_disks = CommonClass.get_available_disks()
+        source_dir = os.path.join(available_disks[0], 'Source Sample')
         dest_dir = os.path.join(os.path.expanduser('~'), 'Documents')
         source_file_path = os.path.join(source_dir, CommonClass.generate_name(extension))
-        available_disks = CommonClass.get_available_disks()
 
         if not available_disks:
             raise RuntimeError('No available disks found.')
