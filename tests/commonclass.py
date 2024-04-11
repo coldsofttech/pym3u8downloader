@@ -67,7 +67,9 @@ class CommonClass:
             else:
                 raise RuntimeError('Insufficient disks available for different disk option.')
 
-        dest_file_path = os.path.join(dest_disk, 'destination', CommonClass.generate_name('.mp4'))
+        dest_file_path = os.path.join(dest_disk, 'temp')
+        dest_file_path = os.path.join(dest_file_path, CommonClass.generate_name('.mp4'))
+        # dest_file_path = os.path.join(dest_disk, 'destination', CommonClass.generate_name('.mp4'))
 
         return source_file_path, dest_file_path
 
