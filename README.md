@@ -4,7 +4,7 @@ M3U8 Downloader is a Python class designed to download and concatenate video fil
 ## Installation
 M3U8Downloader can be installed using pip:
 ```bash
-pip install git+https://github.com/coldsofttech/pym3u8downloader.git
+pip install pym3u8downloader
 ```
 
 ## Usage
