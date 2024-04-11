@@ -60,10 +60,10 @@ class CommonClass:
 
         if same_disk:
             # dest_disk = available_disks[0]
-            print(f'Loop Same Disk')
+            print('Loop Same Disk')
             dest_disk = source_disk
         else:
-            print(f'Loop Different Disk')
+            print('Loop Different Disk')
             if len(available_disks) > 1:
                 # dest_disk = available_disks[1]
                 for disk in available_disks:
