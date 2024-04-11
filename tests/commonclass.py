@@ -45,45 +45,30 @@ class CommonClass:
     @staticmethod
     def generate_sample_file_paths(same_disk: bool = True, extension: str = 'html'):
         """Returns sample source and destination paths based on the provided same_disk value"""
-        print(f'Same Disk: {same_disk}')
         available_disks = CommonClass.get_available_disks()
         if not available_disks:
             raise RuntimeError('No available disks found.')
 
         source_dir = os.getcwd()
         source_disk, _ = os.path.splitdrive(source_dir)
-        print(f'Source Disk: {source_disk}')
-        # dest_dir = os.path.join(os.path.expanduser('~'), 'Documents')
         dest_disk = ''
         source_file_path = os.path.join(source_dir, CommonClass.generate_name(extension))
-        print(f'Source Path: {source_file_path}')
 
         if same_disk:
-            # dest_disk = available_disks[0]
-            print('Loop Same Disk')
             dest_disk = source_disk
         else:
-            print('Loop Different Disk')
             if len(available_disks) > 1:
-                # dest_disk = available_disks[1]
                 for disk in available_disks:
-                    print(f'Disk Found: {disk}')
                     if platform.system().lower() == 'windows':
                         if disk.lower() != f'{source_disk.lower()}\\':
                             dest_disk = disk
                     else:
                         if disk.lower() != source_disk.lower():
                             dest_disk = disk
-                    # if disk != source_disk:
-                    #     dest_disk = disk
             else:
                 raise RuntimeError('Insufficient disks available for different disk option.')
 
-        print(f'Destination Disk: {dest_disk}')
-        # dest_file_path = os.path.join(dest_disk, 'temp')
         dest_file_path = os.path.join(dest_disk, CommonClass.generate_name('.mp4'))
-        print(f'Destination Path: {dest_file_path}')
-        # dest_file_path = os.path.join(dest_disk, 'destination', CommonClass.generate_name('.mp4'))
 
         return source_file_path, dest_file_path
 
