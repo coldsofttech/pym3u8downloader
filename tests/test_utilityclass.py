@@ -15,6 +15,8 @@ class TestUtilityClass(unittest.TestCase):
     def test_are_paths_on_same_disk_valid_on_same_disk(self):
         """Test if are paths on same disk works as expected"""
         path1, path2 = CommonClass.generate_sample_file_paths(True)
+        print(path1)
+        print(path2)
         self.assertTrue(UtilityClass.are_paths_on_same_disk(path1, path2))
 
     def test_are_paths_on_same_disk_valid_on_different_disk(self):

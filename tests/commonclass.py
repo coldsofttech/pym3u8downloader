@@ -47,7 +47,7 @@ class CommonClass:
         """Returns sample source and destination paths based on the provided same_disk value"""
         available_disks = CommonClass.get_available_disks()
         source_dir = os.getcwd()
-        dest_dir = os.path.join(os.path.expanduser('~'), 'Documents')
+        # dest_dir = os.path.join(os.path.expanduser('~'), 'Documents')
         source_file_path = os.path.join(source_dir, CommonClass.generate_name(extension))
 
         if not available_disks:
@@ -62,7 +62,7 @@ class CommonClass:
             else:
                 raise RuntimeError('Insufficient disks available for different disk option.')
 
-        dest_file_path = os.path.join(dest_disk, dest_dir, CommonClass.generate_name('.mp4'))
+        dest_file_path = os.path.join(dest_disk, 'destination', CommonClass.generate_name('.mp4'))
 
         return source_file_path, dest_file_path
 
