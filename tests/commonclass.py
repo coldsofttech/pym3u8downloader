@@ -45,6 +45,7 @@ class CommonClass:
     @staticmethod
     def generate_sample_file_paths(same_disk: bool = True, extension: str = 'html'):
         """Returns sample source and destination paths based on the provided same_disk value"""
+        print(f'Same Disk: {same_disk}')
         available_disks = CommonClass.get_available_disks()
         if not available_disks:
             raise RuntimeError('No available disks found.')
@@ -59,11 +60,14 @@ class CommonClass:
 
         if same_disk:
             # dest_disk = available_disks[0]
+            print(f'Loop Same Disk')
             dest_disk = source_disk
         else:
+            print(f'Loop Different Disk')
             if len(available_disks) > 1:
                 # dest_disk = available_disks[1]
                 for disk in available_disks:
+                    print(f'Disk Found: {disk}')
                     if disk != source_disk:
                         dest_disk = disk
             else:

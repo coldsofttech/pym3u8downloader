@@ -20,7 +20,7 @@ class TestUtilityClass(unittest.TestCase):
     def test_are_paths_on_same_disk_valid_on_different_disk(self):
         """Test if are paths on same disk works as expected"""
         if len(CommonClass.get_available_disks()) > 1:
-            path1, path2 = CommonClass.generate_sample_file_paths(False)
+            path1, path2 = CommonClass.generate_sample_file_paths(same_disk=False)
             self.assertFalse(UtilityClass.are_paths_on_same_disk(path1, path2))
         else:
             self.skipTest('Skipping test_are_paths_on_same_disk_valid_on_different_disk: Only one disk available.')
