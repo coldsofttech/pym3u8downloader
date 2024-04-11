@@ -165,6 +165,11 @@ class UtilityClass:
         if platform.system().lower() == 'windows':
             folder_path = os.path.dirname(folder_path)
 
+        while not os.path.exists(folder_path):
+            folder_path = os.path.dirname(folder_path)
+            if not folder_path:
+                return False
+
         total, used, free = shutil.disk_usage(folder_path)
         return free >= required
 
