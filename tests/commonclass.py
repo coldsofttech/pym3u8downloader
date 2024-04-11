@@ -46,7 +46,7 @@ class CommonClass:
     def generate_sample_file_paths(same_disk: bool = True, extension: str = 'html'):
         """Returns sample source and destination paths based on the provided same_disk value"""
         available_disks = CommonClass.get_available_disks()
-        source_dir = os.path.join(available_disks[0], 'Source Sample')
+        source_dir = os.getcwd()
         dest_dir = os.path.join(os.path.expanduser('~'), 'Documents')
         source_file_path = os.path.join(source_dir, CommonClass.generate_name(extension))
 
@@ -54,7 +54,8 @@ class CommonClass:
             raise RuntimeError('No available disks found.')
 
         if same_disk:
-            dest_disk = available_disks[0]
+            # dest_disk = available_disks[0]
+            dest_disk, _ = os.path.splitdrive(source_dir)
         else:
             if len(available_disks) > 1:
                 dest_disk = available_disks[1]
