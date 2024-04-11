@@ -37,10 +37,12 @@ class UtilityClass:
         mount_point1 = os.path.abspath(path1)
         while not os.path.ismount(mount_point1):
             mount_point1 = os.path.dirname(mount_point1)
+        print(mount_point1)
 
         mount_point2 = os.path.abspath(path2)
         while not os.path.ismount(mount_point2):
             mount_point2 = os.path.dirname(mount_point2)
+        print(mount_point2)
 
         return mount_point1 == mount_point2
 
