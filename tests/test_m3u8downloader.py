@@ -170,6 +170,7 @@ class TestM3U8Downloader(unittest.TestCase):
     def test__check_required_disk_space_invalid_space_required(self):
         """Test if check required disk space raises TypeError"""
         downloader = M3U8Downloader(self.input_file_path, self.output_file_path)
+        downloader._create_temp_directory()
         with self.assertRaises(TypeError):
             downloader._check_required_disk_space('10GB')
 
@@ -208,6 +209,7 @@ class TestM3U8Downloader(unittest.TestCase):
         if len(CommonClass.get_available_disks()) > 1:
             path1, path2 = CommonClass.generate_sample_file_paths(False, 'mp4')
             downloader = M3U8Downloader(self.input_file_path, path2)
+            downloader._create_temp_directory()
             space_required = 10
             try:
                 downloader._check_required_disk_space(space_required)
@@ -223,6 +225,7 @@ class TestM3U8Downloader(unittest.TestCase):
         if len(CommonClass.get_available_disks()) > 1:
             path1, path2 = CommonClass.generate_sample_file_paths(False, 'mp4')
             downloader = M3U8Downloader(self.input_file_path, path2)
+            downloader._create_temp_directory()
             space_required = 2000000000000
             with self.assertRaises(OSError):
                 downloader._check_required_disk_space(space_required)

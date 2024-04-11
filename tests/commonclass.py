@@ -37,7 +37,7 @@ class CommonClass:
         system = platform.system().lower()
         if system == 'windows':
             return [f"{d}:\\" for d in string.ascii_uppercase if os.path.exists(f"{d}:\\")]
-        elif system == 'linux':
+        elif system == 'linux' or system == 'darwin':
             return ['/']
         else:
             return []
