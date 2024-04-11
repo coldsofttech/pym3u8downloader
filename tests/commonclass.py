@@ -62,7 +62,7 @@ class CommonClass:
             if len(available_disks) > 1:
                 # dest_disk = available_disks[1]
                 for disk in available_disks:
-                    if dest_disk != source_disk:
+                    if disk != source_disk:
                         dest_disk = disk
             else:
                 raise RuntimeError('Insufficient disks available for different disk option.')
