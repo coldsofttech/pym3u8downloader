@@ -68,8 +68,14 @@ class CommonClass:
                 # dest_disk = available_disks[1]
                 for disk in available_disks:
                     print(f'Disk Found: {disk}')
-                    if disk != source_disk:
-                        dest_disk = disk
+                    if platform.system().lower() == 'windows':
+                        if disk.lower() != f'{source_disk.lower()}\\':
+                            dest_disk = disk
+                    else:
+                        if disk.lower() != source_disk.lower():
+                            dest_disk = disk
+                    # if disk != source_disk:
+                    #     dest_disk = disk
             else:
                 raise RuntimeError('Insufficient disks available for different disk option.')
 
