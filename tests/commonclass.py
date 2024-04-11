@@ -47,7 +47,9 @@ class CommonClass:
         """Returns sample source and destination paths based on the provided same_disk value"""
         available_disks = CommonClass.get_available_disks()
         source_dir = os.getcwd()
+        source_disk, _ = os.path.splitdrive(source_dir)
         # dest_dir = os.path.join(os.path.expanduser('~'), 'Documents')
+        dest_disk = ''
         source_file_path = os.path.join(source_dir, CommonClass.generate_name(extension))
 
         if not available_disks:
@@ -55,10 +57,13 @@ class CommonClass:
 
         if same_disk:
             # dest_disk = available_disks[0]
-            dest_disk, _ = os.path.splitdrive(source_dir)
+            dest_disk = source_disk
         else:
             if len(available_disks) > 1:
-                dest_disk = available_disks[1]
+                # dest_disk = available_disks[1]
+                for disk in available_disks:
+                    if dest_disk != source_disk:
+                        dest_disk = disk
             else:
                 raise RuntimeError('Insufficient disks available for different disk option.')
 
