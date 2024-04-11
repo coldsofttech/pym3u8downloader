@@ -14,11 +14,16 @@ class TestM3U8Downloader(unittest.TestCase):
     def setUp(self) -> None:
         self.input_file_path = f'{CommonClass.get_git_test_parent_url()}/sample_index.m3u8'
         self.input_file_path_updated = f'{CommonClass.get_git_test_parent_url()}/sample_master.m3u8'
-        self.output_file_path = CommonClass.generate_name('')
-        self.output_file_path_updated = CommonClass.generate_name('')
-        self.output_file_path_with_mp4 = CommonClass.generate_name('mp4')
-        self.debug_file_path = CommonClass.generate_name('log')
-        self.debug_file_path_updated = CommonClass.generate_name('log')
+        # self.output_file_path = CommonClass.generate_name('')
+        self.output_file_path = CommonClass.generate_sample_file_paths(True, '')[0]
+        # self.output_file_path_updated = CommonClass.generate_name('')
+        self.output_file_path_updated = CommonClass.generate_sample_file_paths(True, '')[0]
+        # self.output_file_path_with_mp4 = CommonClass.generate_name('mp4')
+        self.output_file_path_with_mp4 = CommonClass.generate_sample_file_paths(True, 'mp4')[0]
+        # self.debug_file_path = CommonClass.generate_name('log')
+        self.debug_file_path = CommonClass.generate_sample_file_paths(True, 'log')[0]
+        # self.debug_file_path_updated = CommonClass.generate_name('log')
+        self.debug_file_path_updated = CommonClass.generate_sample_file_paths(True, 'log')[0]
 
     def tearDown(self) -> None:
         files = [
