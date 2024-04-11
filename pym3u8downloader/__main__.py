@@ -1,4 +1,5 @@
 import os
+import platform
 import random
 import shutil
 import string
@@ -159,6 +160,9 @@ class UtilityClass:
         elif not isinstance(required, int):
             raise TypeError('required should be an integer.')
 
+        if platform.system().lower() == 'windows':
+            folder_path = os.path.dirname(folder_path)
+            
         total, used, free = shutil.disk_usage(folder_path)
         return free >= required
 
