@@ -1,23 +1,3 @@
-# Copyright (c) 2024 coldsofttech
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-
 import io
 import os
 import sys
@@ -34,11 +14,11 @@ class TestM3U8Downloader(unittest.TestCase):
     def setUp(self) -> None:
         self.input_file_path = f'{CommonClass.get_git_test_parent_url()}/sample_index.m3u8'
         self.input_file_path_updated = f'{CommonClass.get_git_test_parent_url()}/sample_master.m3u8'
-        self.output_file_path = CommonClass.generate_name('')
-        self.output_file_path_updated = CommonClass.generate_name('')
-        self.output_file_path_with_mp4 = CommonClass.generate_name('mp4')
-        self.debug_file_path = CommonClass.generate_name('log')
-        self.debug_file_path_updated = CommonClass.generate_name('log')
+        self.output_file_path = CommonClass.generate_sample_file_paths(True, '')[0]
+        self.output_file_path_updated = CommonClass.generate_sample_file_paths(True, '')[0]
+        self.output_file_path_with_mp4 = CommonClass.generate_sample_file_paths(True, 'mp4')[0]
+        self.debug_file_path = CommonClass.generate_sample_file_paths(True, 'log')[0]
+        self.debug_file_path_updated = CommonClass.generate_sample_file_paths(True, 'log')[0]
 
     def tearDown(self) -> None:
         files = [
@@ -190,6 +170,7 @@ class TestM3U8Downloader(unittest.TestCase):
     def test__check_required_disk_space_invalid_space_required(self):
         """Test if check required disk space raises TypeError"""
         downloader = M3U8Downloader(self.input_file_path, self.output_file_path)
+        downloader._create_temp_directory()
         with self.assertRaises(TypeError):
             downloader._check_required_disk_space('10GB')
 
@@ -228,6 +209,7 @@ class TestM3U8Downloader(unittest.TestCase):
         if len(CommonClass.get_available_disks()) > 1:
             path1, path2 = CommonClass.generate_sample_file_paths(False, 'mp4')
             downloader = M3U8Downloader(self.input_file_path, path2)
+            downloader._create_temp_directory()
             space_required = 10
             try:
                 downloader._check_required_disk_space(space_required)
@@ -243,6 +225,7 @@ class TestM3U8Downloader(unittest.TestCase):
         if len(CommonClass.get_available_disks()) > 1:
             path1, path2 = CommonClass.generate_sample_file_paths(False, 'mp4')
             downloader = M3U8Downloader(self.input_file_path, path2)
+            downloader._create_temp_directory()
             space_required = 2000000000000
             with self.assertRaises(OSError):
                 downloader._check_required_disk_space(space_required)

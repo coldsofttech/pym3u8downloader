@@ -1,23 +1,3 @@
-# Copyright (c) 2024 coldsofttech
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-
 import os
 import platform
 import random
@@ -57,7 +37,7 @@ class CommonClass:
         system = platform.system().lower()
         if system == 'windows':
             return [f"{d}:\\" for d in string.ascii_uppercase if os.path.exists(f"{d}:\\")]
-        elif system == 'linux':
+        elif system == 'linux' or system == 'darwin':
             return ['/']
         else:
             return []
@@ -65,23 +45,30 @@ class CommonClass:
     @staticmethod
     def generate_sample_file_paths(same_disk: bool = True, extension: str = 'html'):
         """Returns sample source and destination paths based on the provided same_disk value"""
-        source_dir = os.getcwd()
-        dest_dir = os.path.join(os.path.expanduser('~'), 'Documents')
-        source_file_path = os.path.join(source_dir, CommonClass.generate_name(extension))
         available_disks = CommonClass.get_available_disks()
-
         if not available_disks:
             raise RuntimeError('No available disks found.')
 
+        source_dir = os.getcwd()
+        source_disk, _ = os.path.splitdrive(source_dir)
+        dest_disk = ''
+        source_file_path = os.path.join(source_dir, CommonClass.generate_name(extension))
+
         if same_disk:
-            dest_disk = available_disks[0]
+            dest_disk = source_disk
         else:
             if len(available_disks) > 1:
-                dest_disk = available_disks[1]
+                for disk in available_disks:
+                    if platform.system().lower() == 'windows':
+                        if disk.lower() != f'{source_disk.lower()}\\':
+                            dest_disk = disk
+                    else:
+                        if disk.lower() != source_disk.lower():
+                            dest_disk = disk
             else:
                 raise RuntimeError('Insufficient disks available for different disk option.')
 
-        dest_file_path = os.path.join(dest_disk, dest_dir, CommonClass.generate_name('.mp4'))
+        dest_file_path = os.path.join(dest_disk, CommonClass.generate_name('.mp4'))
 
         return source_file_path, dest_file_path
 
