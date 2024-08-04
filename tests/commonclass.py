@@ -7,7 +7,7 @@ from typing import Optional
 
 class CommonClass:
     """Utility class for unit tests"""
-    override_branch_name = ''  # Update this when running tests locally
+    override_branch_name = 'main'  # Update this when running tests locally
 
     @staticmethod
     def get_branch_name():
