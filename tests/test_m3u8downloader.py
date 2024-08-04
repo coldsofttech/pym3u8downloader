@@ -5,7 +5,7 @@ import tempfile
 import unittest
 
 from commonclass import CommonClass
-from pym3u8downloader import M3U8Downloader
+from pym3u8downloader import M3U8Downloader, M3U8DownloaderError
 
 
 class TestM3U8Downloader(unittest.TestCase):
@@ -19,6 +19,8 @@ class TestM3U8Downloader(unittest.TestCase):
         self.output_file_path_with_mp4 = CommonClass.generate_sample_file_paths(True, 'mp4')[0]
         self.debug_file_path = CommonClass.generate_sample_file_paths(True, 'log')[0]
         self.debug_file_path_updated = CommonClass.generate_sample_file_paths(True, 'log')[0]
+        self.max_threads = 10
+        self.max_threads_updated = 20
 
     def tearDown(self) -> None:
         files = [
@@ -63,12 +65,18 @@ class TestM3U8Downloader(unittest.TestCase):
         with self.assertRaises(TypeError):
             M3U8Downloader(self.input_file_path, self.output_file_path, False, True, 100)
 
+    def test_init_invalid_max_threads(self):
+        """Test if init raises TypeError"""
+        with self.assertRaises(TypeError):
+            M3U8Downloader(self.input_file_path, self.output_file_path, max_threads='100')
+
     def test_init_valid_params(self):
         """Test if init works as expected"""
         downloader = M3U8Downloader(self.input_file_path, self.output_file_path)
         self.assertEqual(self.input_file_path, downloader.input_file_path)
         self.assertEqual(self.output_file_path, downloader.output_file_path)
         self.assertFalse(downloader.skip_space_check)
+        self.assertEqual(self.max_threads, downloader.max_threads)
 
     def test_init_valid_params_skip_and_debug(self):
         """Test if init works as expected"""
@@ -78,6 +86,15 @@ class TestM3U8Downloader(unittest.TestCase):
         self.assertTrue(downloader.skip_space_check)
         self.assertTrue(downloader.debug)
         self.assertEqual(self.debug_file_path, downloader.debug_file_path)
+        self.assertEqual(self.max_threads, downloader.max_threads)
+
+    def test_init_valid_params_max_threads(self):
+        """Test if init works as expected"""
+        downloader = M3U8Downloader(self.input_file_path, self.output_file_path, max_threads=self.max_threads_updated)
+        self.assertEqual(self.input_file_path, downloader.input_file_path)
+        self.assertEqual(self.output_file_path, downloader.output_file_path)
+        self.assertFalse(downloader.skip_space_check)
+        self.assertEqual(self.max_threads_updated, downloader.max_threads)
 
     def test_input_file_path_property_valid_get(self):
         """Test if input file path property works as expected"""
@@ -169,6 +186,23 @@ class TestM3U8Downloader(unittest.TestCase):
         downloader = M3U8Downloader(self.input_file_path, self.output_file_path, False, True, self.debug_file_path)
         with self.assertRaises(TypeError):
             downloader.debug_file_path = 100
+
+    def test_max_threads_valid_get(self):
+        """Test if max threads works as expected"""
+        downloader = M3U8Downloader(self.input_file_path, self.output_file_path, max_threads=self.max_threads_updated)
+        self.assertEqual(self.max_threads_updated, downloader.max_threads)
+
+    def test_max_threads_valid_set(self):
+        """Test if max threads works as expected"""
+        downloader = M3U8Downloader(self.input_file_path, self.output_file_path)
+        downloader.max_threads = self.max_threads_updated
+        self.assertEqual(self.max_threads_updated, downloader.max_threads)
+
+    def test_max_threads_invalid_set(self):
+        """Test if max threads raises TypeError"""
+        downloader = M3U8Downloader(self.input_file_path, self.output_file_path)
+        with self.assertRaises(TypeError):
+            downloader.max_threads = '100'
 
     def test__check_required_disk_space_invalid_space_required(self):
         """Test if check required disk space raises TypeError"""
@@ -315,6 +349,27 @@ class TestM3U8Downloader(unittest.TestCase):
         try:
             downloader._download_index_file()
             self.assertTrue(downloader._is_master_file())
+        finally:
+            downloader._remove_temp_directory()
+
+    def test__is_playlist_file_invalid(self):
+        """Test if is playlist file works as expected"""
+        self.input_file_path = f'{CommonClass.get_git_test_parent_url()}/sample_master.m3u8'
+        downloader = M3U8Downloader(self.input_file_path, self.output_file_path)
+        downloader._create_temp_directory()
+        try:
+            downloader._download_index_file()
+            self.assertFalse(downloader._is_playlist_file())
+        finally:
+            downloader._remove_temp_directory()
+
+    def test__is_playlist_file_valid(self):
+        """Test if is playlist file works as expected"""
+        downloader = M3U8Downloader(self.input_file_path, self.output_file_path)
+        downloader._create_temp_directory()
+        try:
+            downloader._download_index_file()
+            self.assertTrue(downloader._is_playlist_file())
         finally:
             downloader._remove_temp_directory()
 
@@ -477,6 +532,107 @@ class TestM3U8Downloader(unittest.TestCase):
                 self.assertIn('video_0.ts', file_content)
                 self.assertIn('video_1.ts', file_content)
                 self.assertIn('video_2.ts', file_content)
+        finally:
+            try:
+                downloader._remove_temp_directory()
+            except FileNotFoundError:
+                pass
+
+    def test_download_master_playlist_with_no_params(self):
+        """Test if download master playlist works as expected"""
+        self.input_file_path = f'{CommonClass.get_git_test_parent_url()}/master.m3u8'
+        downloader = M3U8Downloader(self.input_file_path, self.output_file_path)
+        try:
+            with self.assertRaises(UserWarning):
+                downloader.download_master_playlist()
+        finally:
+            try:
+                downloader._remove_temp_directory()
+            except FileNotFoundError:
+                pass
+
+    def test_download_master_playlist_no_name_available(self):
+        """Test if download master playlist works as expected"""
+        self.input_file_path = f'{CommonClass.get_git_test_parent_url()}/master.m3u8'
+        downloader = M3U8Downloader(self.input_file_path, self.output_file_path)
+        try:
+            with self.assertRaises(M3U8DownloaderError):
+                downloader.download_master_playlist(name='720')
+        finally:
+            try:
+                downloader._remove_temp_directory()
+            except FileNotFoundError:
+                pass
+
+    def test_download_master_playlist_no_bandwidth_available(self):
+        """Test if download master playlist works as expected"""
+        self.input_file_path = f'{CommonClass.get_git_test_parent_url()}/master.m3u8'
+        downloader = M3U8Downloader(self.input_file_path, self.output_file_path)
+        try:
+            with self.assertRaises(M3U8DownloaderError):
+                downloader.download_master_playlist(bandwidth='1300000')
+        finally:
+            try:
+                downloader._remove_temp_directory()
+            except FileNotFoundError:
+                pass
+
+    def test_download_master_playlist_no_resolution_available(self):
+        """Test if download master playlist works as expected"""
+        self.input_file_path = f'{CommonClass.get_git_test_parent_url()}/master.m3u8'
+        downloader = M3U8Downloader(self.input_file_path, self.output_file_path)
+        try:
+            with self.assertRaises(M3U8DownloaderError):
+                downloader.download_master_playlist(resolution='320x240')
+        finally:
+            try:
+                downloader._remove_temp_directory()
+            except FileNotFoundError:
+                pass
+
+    def test_download_master_playlist_with_valid_params(self):
+        """Test if download master playlist works as expected"""
+        self.input_file_path = f'{CommonClass.get_git_test_parent_url()}/master.m3u8'
+        downloader = M3U8Downloader(self.input_file_path, self.output_file_path_with_mp4)
+        try:
+            output_buffer = io.StringIO()
+            sys.stdout = output_buffer
+            self.assertFalse(downloader.skip_space_check)
+            downloader.download_master_playlist(resolution='960x540')
+            sys.stdout = sys.__stdout__
+            self.assertTrue(downloader.is_download_complete)
+            self.assertIn('Verify', output_buffer.getvalue())
+            self.assertIn('Download', output_buffer.getvalue())
+            self.assertIn('Build', output_buffer.getvalue())
+            self.assertTrue(os.path.exists(self.output_file_path_with_mp4))
+            self.assertEqual(5589428, os.path.getsize(self.output_file_path_with_mp4))
+            self.assertFalse(os.path.exists(downloader._temp_directory_path))
+        finally:
+            try:
+                downloader._remove_temp_directory()
+            except FileNotFoundError:
+                pass
+
+    def test_download_master_playlist_with_valid_params_and_no_merge(self):
+        """Test if download master playlist works as expected"""
+        self.input_file_path = f'{CommonClass.get_git_test_parent_url()}/master.m3u8'
+        downloader = M3U8Downloader(self.input_file_path, self.output_file_path_with_mp4)
+        try:
+            output_buffer = io.StringIO()
+            sys.stdout = output_buffer
+            self.assertFalse(downloader.skip_space_check)
+            downloader.download_master_playlist(resolution='960x540', merge=False)
+            sys.stdout = sys.__stdout__
+            self.assertTrue(downloader.is_download_complete)
+            self.assertIn('Verify', output_buffer.getvalue())
+            self.assertIn('Download', output_buffer.getvalue())
+            self.assertIn('Build', output_buffer.getvalue())
+            dir_name = os.path.dirname(self.output_file_path_with_mp4)
+            self.assertTrue(os.path.exists(dir_name))
+            self.assertEqual(1860448, os.path.getsize(os.path.join(dir_name, 'video_0.ts.mp4')))
+            self.assertEqual(1868344, os.path.getsize(os.path.join(dir_name, 'video_1.ts.mp4')))
+            self.assertEqual(1860636, os.path.getsize(os.path.join(dir_name, 'video_2.ts.mp4')))
+            self.assertFalse(os.path.exists(downloader._temp_directory_path))
         finally:
             try:
                 downloader._remove_temp_directory()
