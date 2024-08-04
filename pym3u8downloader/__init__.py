@@ -13,6 +13,6 @@ This class provides functionality to handle M3U8 playlist files, download video 
 into a single video file, and manage various error conditions.
 """
 __name__ = "pym3u8downloader"
-__version__ = "0.1.3"
+__version__ = "0.1.4pre"
 
 from pym3u8downloader.__main__ import M3U8Downloader, M3U8DownloaderError

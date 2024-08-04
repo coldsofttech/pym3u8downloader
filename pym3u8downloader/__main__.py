@@ -1,13 +1,14 @@
 import os
 import platform
 import random
+import re
 import shutil
 import string
 import sys
 import tempfile
 import time
 from concurrent.futures import ThreadPoolExecutor
-from typing import Optional, TextIO
+from typing import Optional, TextIO, Union
 from urllib.parse import urlparse
 
 
@@ -241,6 +242,7 @@ class M3U8Downloader:
     _output_file_path = None
     _skip_space_check = False
     _download_complete = False
+    _temp_directories = []
 
     def __init__(
             self,
@@ -517,7 +519,7 @@ class M3U8Downloader:
         with open(os.path.join(self._temp_directory_path, 'mappings'), 'w') as mapping_file:
             for file in self._playlist_files:
                 mapping_file.write(f'file{i}.mp4:{file.split("/")[-1]}\n')
-                i = i + 1
+                i += 1
 
     def _create_temp_directory(self) -> None:
         """
@@ -533,6 +535,7 @@ class M3U8Downloader:
 
         self._debug_logger.debug('Creating temporary directory') if self._debug else None
         os.makedirs(self._temp_directory_path, exist_ok=True)
+        self._temp_directories.append(self._temp_directory)
 
     def _download_and_write(self, sequence: int, url: str, files: TextIO) -> None:
         """
@@ -609,6 +612,54 @@ class M3U8Downloader:
         except requests.RequestException as e:
             self._debug_logger.debug(f'Index file download failed. {e}') if self._debug else None
             return False
+
+    def _extract_playlists(self) -> list:
+        """
+        Extracts the master playlist and collects detailed information on all its attributes.
+
+        :return: A list containing playlists along with their associated attributes.
+        :rtype: list
+        """
+
+        def parse_attributes(attr_str):
+            """
+            Extracts and analyzes the attributes of each variant from the master playlist.
+
+            :param attr_str: The list of attributes in a string format.
+            :type attr_str: str
+            """
+            pattern = r'(?P<key>[A-Z0-9\-]+)=(?P<value>"[^"]*"|[^,]*)'
+            attrs = {}
+
+            for match in re.finditer(pattern, attr_str):
+                key = match.group('key')
+                value = match.group('value').strip('"')
+                attrs[key] = value
+
+            return attrs
+
+        playlist_variants = []
+
+        with open(os.path.join(self._temp_directory_path, 'index.m3u8'), 'r') as index_file:
+            lines = index_file.readlines()
+            for i, line in enumerate(lines):
+                if line.startswith('#EXT-X-STREAM-INF'):
+                    attributes = line.replace('\n', '').split(':')[1]
+                    attr_dict = parse_attributes(attributes)
+
+                    uri = lines[i + 1].replace('\n', '')
+                    variant = {
+                        "bandwidth": attr_dict.get('BANDWIDTH', None),
+                        "name": attr_dict.get('NAME', None),
+                        "resolution": attr_dict.get('RESOLUTION', None),
+                        "uri": (
+                            f'{self._parent_url}/{uri}'
+                            if self._parent_url and not uri.startswith(('http://', 'https://')) else uri
+                        ),
+                    }
+                    playlist_variants.append(variant)
+
+        return playlist_variants
 
     def _get_index_file_name(self) -> str:
         """
@@ -708,14 +759,31 @@ class M3U8Downloader:
 
         return is_master
 
+    def _is_playlist_file(self) -> bool:
+        """
+        Checks if the input file is a playlist.
+
+        :return: True if the input file is a playlist, False otherwise.
+        :rtype: bool
+        """
+        is_playlist = False
+        self._debug_logger.debug('Verifying if input file is playlist') if self._debug else None
+
+        with open(os.path.join(self._temp_directory_path, 'index.m3u8'), 'r') as index_file:
+            for line in index_file:
+                if line.startswith('#EXTINF'):
+                    is_playlist = True
+                    self._debug_logger.debug(f'Identified input file as playlist. {line}') if self._debug else None
+                    break
+
+        return is_playlist
+
     def _move_video_files(self) -> None:
         """
         Transfers the downloaded video segments from the temporary directory to a user-specified directory when
         'merge' is set to False. This operation ensures that each segment is individually available in the desired
         location, maintaining the original structure as specified by the playlist.
         """
-        import shutil
-
         self._debug_logger.debug('Build started') if self._debug else None
         total_files = len(self._playlist_files)
         completed_files = 0
@@ -725,11 +793,19 @@ class M3U8Downloader:
         with open(mappings_file_path, 'r') as mappings_file:
             for file_line in mappings_file:
                 file_line = file_line.replace(f'file{(i + 1)}.mp4:', '').replace("\n", "")
-                dest_file_path = os.path.abspath(os.path.join(self._output_file_path, f'{file_line}.mp4'))
+                dest_file_name = f'{file_line}.mp4'
+                dest_file_path = os.path.abspath(os.path.join(self._output_file_path, dest_file_name))
                 source_file_path = os.path.join(self._temp_directory_path, f'file{(i + 1)}.mp4')
+
+                file_index = 1
+                while os.path.exists(dest_file_path):
+                    dest_file_name = f'{file_line}_{file_index}.mp4'
+                    dest_file_path = os.path.abspath(os.path.join(self._output_file_path, dest_file_name))
+                    file_index += 1
+
                 shutil.copy(source_file_path, dest_file_path)
 
-                i = i + 1
+                i += 1
                 completed_files_now = i
                 if completed_files_now > completed_files:
                     completed_files = completed_files_now
@@ -744,12 +820,57 @@ class M3U8Downloader:
 
             sys.stdout.write("\n")
 
+    @staticmethod
+    def _search_playlist(
+            variants: list,
+            name: Optional[str] = None,
+            bandwidth: Optional[str] = None,
+            resolution: Optional[str] = None
+    ) -> list:
+        """
+        Searches for variants within the master playlist based on the provided criteria and returns the
+        filtered results.
+
+        :param variants: A list of all variant information extracted from the master playlist.
+        :type variants: list
+        :param name: The name of the variant to search for.
+        :type name: str
+        :param bandwidth: The bandwidth of the variant to search for.
+        :type bandwidth: str
+        :param resolution: The resolution of the variant to search for.
+        :type resolution: str
+        """
+
+        def matches(variant):
+            """
+            Checks if the variant matches the specified details and returns True if there is a match,
+            or False otherwise.
+
+            :param variant: A dictionary containing the details of the variant to be checked.
+            :type variant: dict
+            """
+            if name and variant.get('name') != name:
+                return False
+            if bandwidth and variant.get('bandwidth') != bandwidth:
+                return False
+            if resolution and variant.get('resolution') != resolution:
+                return False
+
+            return True
+
+        return [variant for variant in variants if matches(variant)]
+
     def _remove_temp_directory(self) -> None:
         """
         Removes the temporary directory used for storing downloaded files.
         """
         self._debug_logger.debug('Cleaning temporary directory') if self._debug else None
-        shutil.rmtree(self._temp_directory_path)
+        for temp_dir in self._temp_directories:
+            try:
+                shutil.rmtree(os.path.join(tempfile.gettempdir(), temp_dir))
+            except FileNotFoundError:
+                pass
+            self._temp_directories.remove(temp_dir)
 
     def _validate(self) -> None:
         """
@@ -770,6 +891,8 @@ class M3U8Downloader:
         If set to True, the files will be merged; if False, they will be kept separate. The default value is True.
         :type merge: bool
         """
+        validate_type(merge, bool, 'merge should be a boolean.')
+
         if merge:
             self._output_file_path = (
                 self._output_file_path if self._output_file_path.endswith('.mp4') else f'{self._output_file_path}.mp4'
@@ -793,11 +916,16 @@ class M3U8Downloader:
                     message=f'Unable to download "{self._index_file_name}" file.'
                 )
 
-            if self._is_master_file():
-                raise M3U8DownloaderError(
-                    message=f'File "{self._input_file_path}" is identified as master. '
-                            f'Currently, this package does not support downloading master playlist.'
-                )
+            if not self._is_playlist_file():
+                if self._is_master_file():
+                    raise M3U8DownloaderError(
+                        message=f'Identified file "{self._input_file_path}" as master playlist. '
+                                f'Please use "download_master_playlist" instead.'
+                    )
+                else:
+                    raise M3U8DownloaderError(
+                        message=f'File "{self._input_file_path}" is not identified as either playlist or master.'
+                    )
 
             self._playlist_files = self._get_playlist_files()
 
@@ -823,5 +951,87 @@ class M3U8Downloader:
                 self._move_video_files()
 
             self._download_complete = True
+        finally:
+            self._remove_temp_directory()
+
+    def download_master_playlist(
+            self,
+            name: Optional[str] = None,
+            bandwidth: Optional[str] = None,
+            resolution: Optional[str] = None,
+            merge: bool = True
+    ) -> None:
+        """
+        Downloads and concatenates video files from the M3U8 master playlist based on the provided parameters.
+        If no parameters are specified, a UserWarning is raised with a list of all available variants for selection.
+
+        :param name: The name of the variant to search for and download.
+        :type name: str
+        :param bandwidth: The bandwidth of the variant to search for and download.
+        :type bandwidth: str
+        :param resolution: The resolution of the variant to search for and download.
+        :type resolution: str
+        :param merge: A flag to specify whether the downloaded files should be combined into a single output file.
+        If set to True, the files will be merged; if False, they will be kept separate. The default value is True.
+        :type merge: bool
+        """
+        validate_type(name, Union[str, None], 'name should either be a string or None.')
+        validate_type(bandwidth, Union[str, None], 'bandwidth should either be a string or None.')
+        validate_type(resolution, Union[str, None], 'resolution should either be a string or None.')
+        validate_type(merge, bool, 'merge should be a boolean.')
+
+        try:
+            self._create_temp_directory()
+            self._validate()
+            self._index_file_name = self._get_index_file_name()
+            self._debug_logger.debug(f'Index File Name: {self._index_file_name}') if self._debug else None
+            self._parent_url = self._get_parent_url()
+            self._debug_logger.debug(f'Parent URL: {self._parent_url}') if self._debug else None
+
+            if not self._download_index_file():
+                raise M3U8DownloaderError(
+                    message=f'Unable to download "{self._index_file_name}" file.'
+                )
+
+            if not self._is_master_file():
+                if self._is_playlist_file():
+                    raise M3U8DownloaderError(
+                        message=f'Identified file "{self._input_file_path}" as playlist. '
+                                f'Please use "download_playlist" instead.'
+                    )
+                else:
+                    raise M3U8DownloaderError(
+                        message=f'File "{self._input_file_path}" is not identified as either master or playlist.'
+                    )
+
+            variants = self._extract_playlists()
+
+            if name is None and bandwidth is None and resolution is None:
+                display_variants = [
+                    {k: v for k, v in variant.items() if k != 'uri'}
+                    for variant in variants
+                ]
+                formatted_variants = '[\n'
+                for variant in display_variants:
+                    formatted_variant = '     {'
+                    for key, value in variant.items():
+                        formatted_variant += f"'{key}': '{value}', "
+                    formatted_variant = formatted_variant.rstrip(', ')
+                    formatted_variant += '},\n'
+                    formatted_variants += formatted_variant
+                formatted_variants = formatted_variants.rstrip(',\n') + '\n]'
+
+                raise UserWarning(
+                    f'Identified {len(variants)} variants in the master playlist. '
+                    f'To download the desired playlist, please provide additional parameters, such as NAME, BANDWIDTH, '
+                    f'or RESOLUTION, to identify the specific variant.'
+                    f'\nFor example: use "download_master_playlist(name=\'720\', bandwidth=\'2149280\', '
+                    f'resolution=\'1280x720\')".\n\n'
+                    f'You can view the available options using the following list: \n{formatted_variants}'
+                )
+            else:
+                selected_variant = self._search_playlist(variants, name, bandwidth, resolution)[0]
+                self.input_file_path = selected_variant.get('uri')
+                self.download_playlist(merge)
         finally:
             self._remove_temp_directory()
