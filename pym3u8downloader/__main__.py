@@ -11,6 +11,21 @@ from typing import Optional, TextIO
 from urllib.parse import urlparse
 
 
+def validate_type(value, expected_type, message) -> None:
+    """
+    Validates if the given value has the expected type.
+
+    :param value: The value to be validated.
+    :type value: Any
+    :param expected_type: The expected type for the value.
+    :type expected_type: type
+    :param message: The error message to be raised if the type check fails.
+    :type message: str
+    """
+    if not isinstance(value, expected_type):
+        raise TypeError(message)
+
+
 class UtilityClass:
     """
     Utility class containing static methods for common tasks such as file download, checking internet connection,
@@ -29,10 +44,8 @@ class UtilityClass:
         :return: True if the paths are on the same disk, False otherwise.
         :rtype: bool
         """
-        if not isinstance(path1, str):
-            raise TypeError('path1 should be a string.')
-        elif not isinstance(path2, str):
-            raise TypeError('path2 should be a string.')
+        validate_type(path1, str, 'path1 should be a string.')
+        validate_type(path2, str, 'path2 should be a string.')
 
         mount_point1 = os.path.abspath(path1)
         while not os.path.ismount(mount_point1):
@@ -54,12 +67,10 @@ class UtilityClass:
         :param file_name: The name of the file to save.
         :type file_name: str
         """
-        if not isinstance(url, str):
-            raise TypeError('url should be a string.')
-        elif not isinstance(file_name, str):
-            raise TypeError('file_name should be a string.')
-
         import requests
+
+        validate_type(url, str, 'url should be a string.')
+        validate_type(file_name, str, 'file_name should be a string.')
 
         try:
             response = requests.get(url)
@@ -79,6 +90,7 @@ class UtilityClass:
         :return: The content length of the file, or 0 if the file is not found or cannot be accessed.
         :rtype: int
         """
+        import requests
 
         def get_final_url(url: str) -> str:
             """
@@ -95,10 +107,7 @@ class UtilityClass:
             except requests.RequestException:
                 return url
 
-        if not isinstance(file, str):
-            raise TypeError('file should be a string.')
-
-        import requests
+        validate_type(file, str, 'file should be a string.')
 
         try:
             final_url = get_final_url(file)
@@ -138,27 +147,23 @@ class UtilityClass:
        :return: True if the URL ends with ".m3u8", False otherwise.
        :rtype: bool
        """
-        if not isinstance(value, str):
-            raise TypeError('value should be a string.')
-
+        validate_type(value, str, 'value should be a string.')
         return value.endswith('.m3u8')
 
     @staticmethod
     def is_space_available(folder_path: str, required: int) -> bool:
         """
-       Check if there is enough free space available in a folder.
+        Check if there is enough free space available in a folder.
 
-       :param folder_path: The path to the folder.
-       :type folder_path: str
-       :param required: The required amount of free space in bytes.
-       :type required: int
-       :return: True if there is enough free space, False otherwise.
-       :rtype: bool
-       """
-        if not isinstance(folder_path, str):
-            raise TypeError('folder_path should be a string.')
-        elif not isinstance(required, int):
-            raise TypeError('required should be an integer.')
+        :param folder_path: The path to the folder.
+        :type folder_path: str
+        :param required: The required amount of free space in bytes.
+        :type required: int
+        :return: True if there is enough free space, False otherwise.
+        :rtype: bool
+        """
+        validate_type(folder_path, str, 'folder_path should be a string.')
+        validate_type(required, int, 'required should be an integer.')
 
         if platform.system().lower() == 'windows':
             folder_path = os.path.dirname(folder_path)
@@ -181,9 +186,7 @@ class UtilityClass:
         :return: True if the string is a valid URL, False otherwise.
         :rtype: bool
         """
-        if not isinstance(value, str):
-            raise TypeError('value should be a string.')
-
+        validate_type(value, str, 'value should be a string.')
         parsed_url = urlparse(value)
         return bool(parsed_url.scheme) and bool(parsed_url.netloc)
 
@@ -197,9 +200,7 @@ class UtilityClass:
         :return: The randomly generated string.
         :rtype: str
         """
-        if not isinstance(length, int):
-            raise TypeError('length should be an integer.')
-
+        validate_type(length, int, 'length should be an integer.')
         characters = string.ascii_letters + string.digits
         return ''.join(random.choice(characters) for _ in range(length))
 
@@ -219,9 +220,7 @@ class M3U8DownloaderError(RuntimeError):
         :param message: A human-readable error message describing the exception
         :type message: str
         """
-        if not isinstance(message, str):
-            raise TypeError('message should be a string.')
-
+        validate_type(message, str, 'message should be a string.')
         self.message = message
         super().__init__(self.message)
 
@@ -268,18 +267,12 @@ class M3U8Downloader:
         :param max_threads: The maximum number of threads that can be executed in parallel. Defaults to 10.
         :type max_threads: int
         """
-        if not isinstance(input_file_path, str):
-            raise TypeError('input_file_path should be a string.')
-        elif not isinstance(output_file_path, str):
-            raise TypeError('output_file_path should be a string.')
-        elif not isinstance(skip_space_check, bool):
-            raise TypeError('skip_space_check should be a boolean.')
-        elif not isinstance(debug, bool):
-            raise TypeError('debug should be a boolean.')
-        elif not isinstance(debug_file_path, str):
-            raise TypeError('debug_file_path should be a string.')
-        elif not isinstance(max_threads, int):
-            raise TypeError('max_threads should be an integer.')
+        validate_type(input_file_path, str, 'input_file_path should be a string.')
+        validate_type(output_file_path, str, 'output_file_path should be a string.')
+        validate_type(skip_space_check, bool, 'skip_space_check should be a boolean.')
+        validate_type(debug, bool, 'debug should be a boolean.')
+        validate_type(debug_file_path, str, 'debug_file_path should be a string.')
+        validate_type(max_threads, int, 'max_threads should be an integer.')
 
         self._max_threads = max_threads
         self._debug = debug
@@ -287,9 +280,7 @@ class M3U8Downloader:
         self._configure_debug_logger()
         self._input_file_path = input_file_path
         self._debug_logger.debug(f'Input File Path: {self._input_file_path}') if self._debug else None
-        self._output_file_path = (
-            output_file_path if output_file_path.endswith('.mp4') else f'{output_file_path}.mp4'
-        )
+        self._output_file_path = output_file_path
         self._debug_logger.debug(f'Output File Path: {self._output_file_path}') if self._debug else None
         self._skip_space_check = skip_space_check
         self._debug_logger.debug(f'Skip Space Check: {self._skip_space_check}') if self._debug else None
@@ -315,9 +306,7 @@ class M3U8Downloader:
         :param value: The new input file path.
         :type value: str
         """
-        if not isinstance(value, str):
-            raise TypeError('input_file_path should be a string.')
-
+        validate_type(value, str, 'input_file_path should be a string.')
         self._input_file_path = value
         self._debug_logger.debug(f'Input File Path: {self._input_file_path}') if self._debug else None
 
@@ -339,9 +328,7 @@ class M3U8Downloader:
         :param value: The new output file path.
         :type value: str
         """
-        if not isinstance(value, str):
-            raise TypeError('output_file_path should be a string.')
-
+        validate_type(value, str, 'output_file_path should be a string.')
         self._output_file_path = (
             value if value.endswith('.mp4') else f'{value}.mp4'
         )
@@ -365,9 +352,7 @@ class M3U8Downloader:
         :param value: The new value for the skip space check flag.
         :type value: bool
         """
-        if not isinstance(value, bool):
-            raise TypeError('skip_space_check should be a boolean.')
-
+        validate_type(value, bool, 'skip_space_check should be a boolean.')
         self._skip_space_check = value
         self._debug_logger.debug(f'Skip Space Check: {self._skip_space_check}') if self._debug else None
 
@@ -389,9 +374,7 @@ class M3U8Downloader:
         :param value: The new value for the debug flag.
         :type value: bool
         """
-        if not isinstance(value, bool):
-            raise TypeError('debug should be a boolean.')
-
+        validate_type(value, bool, 'debug should be a boolean.')
         self._debug = value
 
     @property
@@ -412,9 +395,7 @@ class M3U8Downloader:
         :param value: The new value for debug file path.
         :type value: str
         """
-        if not isinstance(value, str):
-            raise TypeError('debug_file_path should be a string.')
-
+        validate_type(value, str, 'debug_file_path should be a string.')
         self._debug_file_path = value
 
     @property
@@ -435,9 +416,7 @@ class M3U8Downloader:
         :param value: The new value for the maximum number of threads that can be executed in parallel.
         :type value: int
         """
-        if not isinstance(value, int):
-            raise TypeError('max_threads should be an integer.')
-
+        validate_type(value, int, 'max_threads should be an integer.')
         self._max_threads = value
 
     @property
@@ -457,8 +436,7 @@ class M3U8Downloader:
         :param space_required: The amount of disk space required in bytes.
         :type space_required: int
         """
-        if not isinstance(space_required, int):
-            raise TypeError('space_required should be an integer.')
+        validate_type(space_required, int, 'space_required should be an integer.')
 
         if UtilityClass.are_paths_on_same_disk(self._temp_directory_path, self._output_file_path):
             if not UtilityClass.is_space_available(self._temp_directory_path, 2 * space_required):
@@ -529,6 +507,18 @@ class M3U8Downloader:
             self._debug_logger = pyloggermanager.Logger(name='debug_logger', level=pyloggermanager.LogLevel.DEBUG)
             self._debug_logger.add_handler(handler)
 
+    def _create_mappings(self) -> None:
+        """
+        Creates a mapping between downloaded file names and the original file names from the m3u8 playlist.
+        This mapping is useful when 'merge' is set to False, allowing for easy reference to the original media
+        segments.
+        """
+        i = 1
+        with open(os.path.join(self._temp_directory_path, 'mappings'), 'w') as mapping_file:
+            for file in self._playlist_files:
+                mapping_file.write(f'file{i}.mp4:{file.split("/")[-1]}\n')
+                i = i + 1
+
     def _create_temp_directory(self) -> None:
         """
         Creates a temporary directory for storing downloaded files.
@@ -555,12 +545,10 @@ class M3U8Downloader:
         :param files: The file object for writing playlist files.
         :type files: TextIO
         """
-        if not isinstance(sequence, int):
-            raise TypeError('sequence should be an integer.')
-        elif not isinstance(url, str):
-            raise TypeError('url should be an integer.')
-
         import requests
+
+        validate_type(sequence, int, 'sequence should be an integer.')
+        validate_type(url, str, 'url should be a string.')
 
         try:
             file_name = f'file{sequence}.mp4'
@@ -651,6 +639,7 @@ class M3U8Downloader:
         """
         self._debug_logger.debug('Gathering playlist from input file') if self._debug else None
         playlist_files: list[str] = []
+
         with open(os.path.join(self._temp_directory_path, 'index.m3u8'), 'r') as index_file:
             for line in index_file:
                 line = line.strip()
@@ -709,6 +698,7 @@ class M3U8Downloader:
         """
         is_master = False
         self._debug_logger.debug('Verifying if input file is master') if self._debug else None
+
         with open(os.path.join(self._temp_directory_path, 'index.m3u8'), 'r') as index_file:
             for line in index_file:
                 if line.startswith('#EXT-X-STREAM-INF'):
@@ -717,6 +707,42 @@ class M3U8Downloader:
                     break
 
         return is_master
+
+    def _move_video_files(self) -> None:
+        """
+        Transfers the downloaded video segments from the temporary directory to a user-specified directory when
+        'merge' is set to False. This operation ensures that each segment is individually available in the desired
+        location, maintaining the original structure as specified by the playlist.
+        """
+        import shutil
+
+        self._debug_logger.debug('Build started') if self._debug else None
+        total_files = len(self._playlist_files)
+        completed_files = 0
+        mappings_file_path = os.path.join(self._temp_directory_path, 'mappings')
+
+        i = 0
+        with open(mappings_file_path, 'r') as mappings_file:
+            for file_line in mappings_file:
+                file_line = file_line.replace(f'file{(i + 1)}.mp4:', '').replace("\n", "")
+                dest_file_path = os.path.abspath(os.path.join(self._output_file_path, f'{file_line}.mp4'))
+                source_file_path = os.path.join(self._temp_directory_path, f'file{(i + 1)}.mp4')
+                shutil.copy(source_file_path, dest_file_path)
+
+                i = i + 1
+                completed_files_now = i
+                if completed_files_now > completed_files:
+                    completed_files = completed_files_now
+                    percentage = completed_files * 100 // total_files
+                    progress_bar = "#" * (percentage // 2)
+                    sys.stdout.write(f"\rBuild   : [{progress_bar:<50}] {percentage}%")
+                    sys.stdout.flush()
+
+                self._debug_logger.debug(f'Copied {source_file_path} to {dest_file_path}') if self._debug else None
+
+                time.sleep(0.1)
+
+            sys.stdout.write("\n")
 
     def _remove_temp_directory(self) -> None:
         """
@@ -736,10 +762,23 @@ class M3U8Downloader:
         elif not UtilityClass.is_internet_connected():
             raise M3U8DownloaderError('Internet connection required.')
 
-    def download_playlist(self) -> None:
+    def download_playlist(self, merge: bool = True) -> None:
         """
         Downloads and concatenates the video files from the M3U8 playlist.
+
+        :param merge: A flag to specify whether the downloaded files should be combined into a single output file.
+        If set to True, the files will be merged; if False, they will be kept separate. The default value is True.
+        :type merge: bool
         """
+        if merge:
+            self._output_file_path = (
+                self._output_file_path if self._output_file_path.endswith('.mp4') else f'{self._output_file_path}.mp4'
+            )
+            self._debug_logger.debug(f'Output File Path: {self._output_file_path}') if self._debug else None
+        else:
+            self._output_file_path = os.path.dirname(self._output_file_path)
+            self._debug_logger.debug(f'Output Folder Path: {self._output_file_path}') if self._debug else None
+
         try:
             self._create_temp_directory()
             self._download_complete = False
@@ -763,8 +802,9 @@ class M3U8Downloader:
             self._playlist_files = self._get_playlist_files()
 
             if not self._skip_space_check:
-                self._debug_logger.debug('Verifying if required space '
-                                         'is available for download') if self._debug else None
+                self._debug_logger.debug(
+                    'Verifying if required space is available for download'
+                ) if self._debug else None
                 playlist_size = self._get_playlist_size()
                 self._debug_logger.debug(f'Required space: {playlist_size}') if self._debug else None
                 self._check_required_disk_space(playlist_size)
@@ -772,8 +812,16 @@ class M3U8Downloader:
             else:
                 self._debug_logger.debug('Verification of space required skipped') if self._debug else None
 
+            if not merge:
+                self._create_mappings()
+
             self._download_files_with_progress()
-            self._concatenate_video_files()
+
+            if merge:
+                self._concatenate_video_files()
+            else:
+                self._move_video_files()
+
             self._download_complete = True
         finally:
             self._remove_temp_directory()
