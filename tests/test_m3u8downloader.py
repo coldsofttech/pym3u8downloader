@@ -551,6 +551,19 @@ class TestM3U8Downloader(unittest.TestCase):
             except FileNotFoundError:
                 pass
 
+    def test_download_master_playlist_with_no_params(self):
+        """Test if download master playlist works as expected"""
+        self.input_file_path = f'{CommonClass.get_git_test_parent_url()}/master.m3u8'
+        downloader = M3U8Downloader(self.input_file_path, self.output_file_path)
+        try:
+            with self.assertRaises(UserWarning):
+                downloader.download_master_playlist()
+        finally:
+            try:
+                downloader._remove_temp_directory()
+            except FileNotFoundError:
+                pass
+
     def test_download_master_playlist_no_name_available(self):
         """Test if download master playlist works as expected"""
         self.input_file_path = f'{CommonClass.get_git_test_parent_url()}/master.m3u8'

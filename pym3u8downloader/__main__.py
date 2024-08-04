@@ -1030,6 +1030,88 @@ class M3U8Downloader:
                     f'You can view the available options using the following list: \n{formatted_variants}'
                 )
             else:
+                selected_variant = self._search_playlist(variants, name, bandwidth, resolution)[0]
+                self.input_file_path = selected_variant.get('uri')
+                self.download_playlist(merge)
+        finally:
+            self._remove_temp_directory()
+
+    def download_master_playlist(
+            self,
+            name: Optional[str] = None,
+            bandwidth: Optional[str] = None,
+            resolution: Optional[str] = None,
+            merge: bool = True
+    ) -> None:
+        """
+        Downloads and concatenates video files from the M3U8 master playlist based on the provided parameters.
+        If no parameters are specified, a UserWarning is raised with a list of all available variants for selection.
+
+        :param name: The name of the variant to search for and download.
+        :type name: str
+        :param bandwidth: The bandwidth of the variant to search for and download.
+        :type bandwidth: str
+        :param resolution: The resolution of the variant to search for and download.
+        :type resolution: str
+        :param merge: A flag to specify whether the downloaded files should be combined into a single output file.
+        If set to True, the files will be merged; if False, they will be kept separate. The default value is True.
+        :type merge: bool
+        """
+        validate_type(name, Union[str, None], 'name should either be a string or None.')
+        validate_type(bandwidth, Union[str, None], 'bandwidth should either be a string or None.')
+        validate_type(resolution, Union[str, None], 'resolution should either be a string or None.')
+        validate_type(merge, bool, 'merge should be a boolean.')
+
+        try:
+            self._create_temp_directory()
+            self._validate()
+            self._index_file_name = self._get_index_file_name()
+            self._debug_logger.debug(f'Index File Name: {self._index_file_name}') if self._debug else None
+            self._parent_url = self._get_parent_url()
+            self._debug_logger.debug(f'Parent URL: {self._parent_url}') if self._debug else None
+
+            if not self._download_index_file():
+                raise M3U8DownloaderError(
+                    message=f'Unable to download "{self._index_file_name}" file.'
+                )
+
+            if not self._is_master_file():
+                if self._is_playlist_file():
+                    raise M3U8DownloaderError(
+                        message=f'Identified file "{self._input_file_path}" as playlist. '
+                                f'Please use "download_playlist" instead.'
+                    )
+                else:
+                    raise M3U8DownloaderError(
+                        message=f'File "{self._input_file_path}" is not identified as either master or playlist.'
+                    )
+
+            variants = self._extract_playlists()
+
+            if name is None and bandwidth is None and resolution is None:
+                display_variants = [
+                    {k: v for k, v in variant.items() if k != 'uri'}
+                    for variant in variants
+                ]
+                formatted_variants = '[\n'
+                for variant in display_variants:
+                    formatted_variant = '     {'
+                    for key, value in variant.items():
+                        formatted_variant += f"'{key}': '{value}', "
+                    formatted_variant = formatted_variant.rstrip(', ')
+                    formatted_variant += '},\n'
+                    formatted_variants += formatted_variant
+                formatted_variants = formatted_variants.rstrip(',\n') + '\n]'
+
+                raise UserWarning(
+                    f'Identified {len(variants)} variants in the master playlist. '
+                    f'To download the desired playlist, please provide additional parameters, such as NAME, BANDWIDTH, '
+                    f'or RESOLUTION, to identify the specific variant.'
+                    f'\nFor example: use "download_master_playlist(name=\'720\', bandwidth=\'2149280\', '
+                    f'resolution=\'1280x720\')".\n\n'
+                    f'You can view the available options using the following list: \n{formatted_variants}'
+                )
+            else:
                 selected_variant = self._search_playlist(variants, name, bandwidth, resolution)
                 if len(selected_variant) > 0:
                     self.input_file_path = selected_variant[0].get('uri')
