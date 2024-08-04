@@ -134,3 +134,20 @@ package analyzes the master playlist and lists all available variants to assist 
 
 Review the list of available variants provided in the warning message. Choose the appropriate values for name,
 bandwidth, and resolution, and then provide these parameters to download the desired video segments.
+
+**Error Message:**
+
+```html
+pym3u8downloader.__main__.M3U8DownloaderError: Selected variant, name="***", bandwidth="***", resolution="***" not found.
+```
+
+**Description:**
+
+This error occurs when the specified parameters (name, bandwidth, or resolution) for the `download_master_playlist`
+method do not match any of the variants listed in the master playlist.
+
+**Solution:**
+
+Verify that the details for the variant (name, bandwidth, and resolution) are accurate and match one of the available
+options in the master playlist. If you are unsure of the available variants, remove the parameters to receive
+a `UserWarning` that will provide a list of all available variants from which you can choose.
