@@ -1030,9 +1030,15 @@ class M3U8Downloader:
                     f'You can view the available options using the following list: \n{formatted_variants}'
                 )
             else:
-                selected_variant = self._search_playlist(variants, name, bandwidth, resolution)[0]
-                self.input_file_path = selected_variant.get('uri')
-                self.download_playlist(merge)
+                selected_variant = self._search_playlist(variants, name, bandwidth, resolution)
+                if len(selected_variant) > 0:
+                    self.input_file_path = selected_variant[0].get('uri')
+                    self.download_playlist(merge)
+                else:
+                    raise M3U8DownloaderError(
+                        message=f'Selected variant, name="{name}", bandwidth="{bandwidth}", '
+                                f'resolution="{resolution}" not found.'
+                    )
         finally:
             self._remove_temp_directory()
 
