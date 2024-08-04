@@ -173,6 +173,7 @@ class TestM3U8Downloader(unittest.TestCase):
         downloader._create_temp_directory()
         with self.assertRaises(TypeError):
             downloader._check_required_disk_space('10GB')
+        downloader._remove_temp_directory()
 
     def test__check_required_disk_space_valid_same_disk_available(self):
         """Test if check required disk space works as expected"""
@@ -184,6 +185,8 @@ class TestM3U8Downloader(unittest.TestCase):
             downloader._check_required_disk_space(space_required)
         except OSError as e:
             self.fail(str(e))
+        finally:
+            downloader._remove_temp_directory()
 
     def test__create_temp_directory(self):
         """Test if create temp directory works as expected"""
@@ -203,6 +206,7 @@ class TestM3U8Downloader(unittest.TestCase):
         space_required = 2000000000000
         with self.assertRaises(OSError):
             downloader._check_required_disk_space(space_required)
+        downloader._remove_temp_directory()
 
     def test__check_required_disk_space_valid_different_disk_available(self):
         """Test if check required disk space works as expected"""
@@ -215,6 +219,8 @@ class TestM3U8Downloader(unittest.TestCase):
                 downloader._check_required_disk_space(space_required)
             except OSError as e:
                 self.fail(str(e))
+            finally:
+                downloader._remove_temp_directory()
         else:
             self.skipTest(
                 'Skipping test__check_required_disk_space_valid_different_disk_available: Only one disk available'
@@ -229,6 +235,7 @@ class TestM3U8Downloader(unittest.TestCase):
             space_required = 2000000000000
             with self.assertRaises(OSError):
                 downloader._check_required_disk_space(space_required)
+            downloader._remove_temp_directory()
         else:
             self.skipTest(
                 'Skipping test__check_required_disk_space_valid_different_disk_unavailable: Only one disk available'

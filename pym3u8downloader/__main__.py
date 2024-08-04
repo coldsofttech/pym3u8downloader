@@ -234,6 +234,7 @@ class M3U8Downloader:
     concatenate them into a single video file, and handle various error conditions.
     """
 
+    _max_threads = 10
     _debug = False
     _debug_file_path = None
     _debug_logger = None
@@ -241,7 +242,6 @@ class M3U8Downloader:
     _output_file_path = None
     _skip_space_check = False
     _download_complete = False
-    _cancelled = False
 
     def __init__(
             self,
@@ -249,7 +249,8 @@ class M3U8Downloader:
             output_file_path: str,
             skip_space_check: Optional[bool] = False,
             debug: Optional[bool] = False,
-            debug_file_path: Optional[str] = 'debug.log'
+            debug_file_path: Optional[str] = 'debug.log',
+            max_threads: Optional[int] = 10
     ) -> None:
         """
         Initializes the M3U8Downloader object with the specified parameters.
@@ -264,6 +265,8 @@ class M3U8Downloader:
         :type debug: bool
         :param debug_file_path: The file path for storing debug logs. Defaults to 'debug.log'.
         :type debug_file_path: str
+        :param max_threads: The maximum number of threads that can be executed in parallel. Defaults to 10.
+        :type max_threads: int
         """
         if not isinstance(input_file_path, str):
             raise TypeError('input_file_path should be a string.')
@@ -275,7 +278,10 @@ class M3U8Downloader:
             raise TypeError('debug should be a boolean.')
         elif not isinstance(debug_file_path, str):
             raise TypeError('debug_file_path should be a string.')
+        elif not isinstance(max_threads, int):
+            raise TypeError('max_threads should be an integer.')
 
+        self._max_threads = max_threads
         self._debug = debug
         self._debug_file_path = debug_file_path
         self._configure_debug_logger()
@@ -410,6 +416,29 @@ class M3U8Downloader:
             raise TypeError('debug_file_path should be a string.')
 
         self._debug_file_path = value
+
+    @property
+    def max_threads(self) -> int:
+        """
+        Getter property for the maximum number of threads.
+
+        :return: The maximum number of threads that can be executed in parallel.
+        :rtype: str
+        """
+        return self._max_threads
+
+    @max_threads.setter
+    def max_threads(self, value: int) -> None:
+        """
+        Setter property for the maximum number of threads.
+
+        :param value: The new value for the maximum number of threads that can be executed in parallel.
+        :type value: int
+        """
+        if not isinstance(value, int):
+            raise TypeError('max_threads should be an integer.')
+
+        self._max_threads = value
 
     @property
     def is_download_complete(self) -> bool:
@@ -553,7 +582,7 @@ class M3U8Downloader:
         completed_files = 0
 
         with open(os.path.join(self._temp_directory_path, 'playlist_files'), 'w') as files:
-            with ThreadPoolExecutor(max_workers=10) as executor:
+            with ThreadPoolExecutor(max_workers=self._max_threads) as executor:
                 futures = []
                 for counter, url in enumerate(self._playlist_files, start=1):
                     future = executor.submit(self._download_and_write, counter, url, files)
@@ -647,7 +676,7 @@ class M3U8Downloader:
         total_files = len(self._playlist_files)
         completed_files = 0
 
-        with ThreadPoolExecutor(max_workers=10) as executor:
+        with ThreadPoolExecutor(max_workers=self._max_threads) as executor:
             futures = []
             for counter, file in enumerate(self._playlist_files, start=1):
                 future = executor.submit(UtilityClass.get_content_length, file)
