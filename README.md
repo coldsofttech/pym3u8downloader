@@ -45,13 +45,17 @@ downloader.download_playlist()
 - `skip_space_check`: Getter/setter property for the skip space check flag.
 - `debug`: Getter/setter property for the debug flag.
 - `debug_file_path`: Getter/setter property for the debug file path.
+- `max_threads`: Getter/setter property for the maximum number of threads that can be executed in parallel.
 - `is_download_complete`: Getter property for the download completion status.
 
 #### Methods
 
-- `__init__(input_file_path: str, output_file_path: str, skip_space_check: Optional[bool] = False, debug: Optional[bool] = False, debug_file_path: Optional[str] = 'debug.log')`:
+- `__init__(input_file_path: str, output_file_path: str, skip_space_check: Optional[bool] = False, debug: Optional[bool] = False, debug_file_path: Optional[str] = 'debug.log', max_threads: Optional[int] = 10)`:
   Initializes the M3U8Downloader object with the specified parameters.
-- `download_playlist()`: Downloads and concatenates the video files from the M3U8 playlist.
+- `download_playlist(merge: bool = True)`: Downloads video files from an M3U8 playlist. The optional `merge`
+  parameter determines the handling of the downloaded segments. When `merge` is set to `True`, the method downloads and
+  concatenates all video segments into a single output file. If `merge` is `False`, it only downloads the segments
+  without concatenating them, keeping each segment as an individual file.
 
 ### `M3U8DownloaderError`
 

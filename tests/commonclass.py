@@ -2,6 +2,7 @@ import os
 import platform
 import random
 import string
+from typing import Optional
 
 
 class CommonClass:
@@ -25,11 +26,11 @@ class CommonClass:
         )
 
     @staticmethod
-    def generate_name(extension: str, length: int = 10) -> str:
+    def generate_name(extension: Optional[str], length: int = 10) -> str:
         """Generates file name based on the extension provided"""
         letters = string.ascii_lowercase
         file_name = ''.join(random.choice(letters) for _ in range(length))
-        return f'{file_name}.{extension}'
+        return f'{file_name}.{extension}' if extension is not None else file_name
 
     @staticmethod
     def get_available_disks():
@@ -43,7 +44,7 @@ class CommonClass:
             return []
 
     @staticmethod
-    def generate_sample_file_paths(same_disk: bool = True, extension: str = 'html'):
+    def generate_sample_file_paths(same_disk: bool = True, extension: Optional[str] = 'html'):
         """Returns sample source and destination paths based on the provided same_disk value"""
         available_disks = CommonClass.get_available_disks()
         if not available_disks:

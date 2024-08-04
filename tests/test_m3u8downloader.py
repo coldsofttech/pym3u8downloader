@@ -14,8 +14,8 @@ class TestM3U8Downloader(unittest.TestCase):
     def setUp(self) -> None:
         self.input_file_path = f'{CommonClass.get_git_test_parent_url()}/sample_index.m3u8'
         self.input_file_path_updated = f'{CommonClass.get_git_test_parent_url()}/sample_master.m3u8'
-        self.output_file_path = CommonClass.generate_sample_file_paths(True, '')[0]
-        self.output_file_path_updated = CommonClass.generate_sample_file_paths(True, '')[0]
+        self.output_file_path = CommonClass.generate_sample_file_paths(True, None)[0]
+        self.output_file_path_updated = CommonClass.generate_sample_file_paths(True, None)[0]
         self.output_file_path_with_mp4 = CommonClass.generate_sample_file_paths(True, 'mp4')[0]
         self.debug_file_path = CommonClass.generate_sample_file_paths(True, 'log')[0]
         self.debug_file_path_updated = CommonClass.generate_sample_file_paths(True, 'log')[0]
@@ -26,7 +26,10 @@ class TestM3U8Downloader(unittest.TestCase):
             self.output_file_path_updated,
             self.output_file_path_with_mp4,
             self.debug_file_path,
-            self.debug_file_path_updated
+            self.debug_file_path_updated,
+            'video_0.ts.mp4',
+            'video_1.ts.mp4',
+            'video_2.ts.mp4'
         ]
 
         for file in files:
@@ -64,14 +67,14 @@ class TestM3U8Downloader(unittest.TestCase):
         """Test if init works as expected"""
         downloader = M3U8Downloader(self.input_file_path, self.output_file_path)
         self.assertEqual(self.input_file_path, downloader.input_file_path)
-        self.assertEqual(f'{self.output_file_path}.mp4', downloader.output_file_path)
+        self.assertEqual(self.output_file_path, downloader.output_file_path)
         self.assertFalse(downloader.skip_space_check)
 
     def test_init_valid_params_skip_and_debug(self):
         """Test if init works as expected"""
         downloader = M3U8Downloader(self.input_file_path, self.output_file_path, True, True, self.debug_file_path)
         self.assertEqual(self.input_file_path, downloader.input_file_path)
-        self.assertEqual(f'{self.output_file_path}.mp4', downloader.output_file_path)
+        self.assertEqual(self.output_file_path, downloader.output_file_path)
         self.assertTrue(downloader.skip_space_check)
         self.assertTrue(downloader.debug)
         self.assertEqual(self.debug_file_path, downloader.debug_file_path)
@@ -96,7 +99,7 @@ class TestM3U8Downloader(unittest.TestCase):
     def test_output_file_path_property_valid_get(self):
         """Test if output file path property works as expected"""
         downloader = M3U8Downloader(self.input_file_path, self.output_file_path)
-        self.assertEqual(f'{self.output_file_path}.mp4', downloader.output_file_path)
+        self.assertEqual(self.output_file_path, downloader.output_file_path)
 
     def test_output_file_path_property_valid_set_no_mp4(self):
         """Test if output file path property works as expected"""
@@ -173,6 +176,7 @@ class TestM3U8Downloader(unittest.TestCase):
         downloader._create_temp_directory()
         with self.assertRaises(TypeError):
             downloader._check_required_disk_space('10GB')
+        downloader._remove_temp_directory()
 
     def test__check_required_disk_space_valid_same_disk_available(self):
         """Test if check required disk space works as expected"""
@@ -184,6 +188,8 @@ class TestM3U8Downloader(unittest.TestCase):
             downloader._check_required_disk_space(space_required)
         except OSError as e:
             self.fail(str(e))
+        finally:
+            downloader._remove_temp_directory()
 
     def test__create_temp_directory(self):
         """Test if create temp directory works as expected"""
@@ -203,6 +209,7 @@ class TestM3U8Downloader(unittest.TestCase):
         space_required = 2000000000000
         with self.assertRaises(OSError):
             downloader._check_required_disk_space(space_required)
+        downloader._remove_temp_directory()
 
     def test__check_required_disk_space_valid_different_disk_available(self):
         """Test if check required disk space works as expected"""
@@ -215,6 +222,8 @@ class TestM3U8Downloader(unittest.TestCase):
                 downloader._check_required_disk_space(space_required)
             except OSError as e:
                 self.fail(str(e))
+            finally:
+                downloader._remove_temp_directory()
         else:
             self.skipTest(
                 'Skipping test__check_required_disk_space_valid_different_disk_available: Only one disk available'
@@ -229,6 +238,7 @@ class TestM3U8Downloader(unittest.TestCase):
             space_required = 2000000000000
             with self.assertRaises(OSError):
                 downloader._check_required_disk_space(space_required)
+            downloader._remove_temp_directory()
         else:
             self.skipTest(
                 'Skipping test__check_required_disk_space_valid_different_disk_unavailable: Only one disk available'
@@ -408,6 +418,32 @@ class TestM3U8Downloader(unittest.TestCase):
             self.assertIn('Build', output_buffer.getvalue())
             self.assertTrue(os.path.exists(self.output_file_path_with_mp4))
             self.assertEqual(5589428, os.path.getsize(self.output_file_path_with_mp4))
+            self.assertFalse(os.path.exists(downloader._temp_directory_path))
+        finally:
+            try:
+                downloader._remove_temp_directory()
+            except FileNotFoundError:
+                pass
+
+    def test_download_playlist_without_merge(self):
+        """Test if download playlist works as expected"""
+        self.input_file_path = f'{CommonClass.get_git_test_parent_url()}/index.m3u8'
+        downloader = M3U8Downloader(self.input_file_path, self.output_file_path_with_mp4)
+        try:
+            output_buffer = io.StringIO()
+            sys.stdout = output_buffer
+            self.assertFalse(downloader.skip_space_check)
+            downloader.download_playlist(merge=False)
+            sys.stdout = sys.__stdout__
+            self.assertTrue(downloader.is_download_complete)
+            self.assertIn('Verify', output_buffer.getvalue())
+            self.assertIn('Download', output_buffer.getvalue())
+            self.assertIn('Build', output_buffer.getvalue())
+            dir_name = os.path.dirname(self.output_file_path_with_mp4)
+            self.assertTrue(os.path.exists(dir_name))
+            self.assertEqual(1860448, os.path.getsize(os.path.join(dir_name, 'video_0.ts.mp4')))
+            self.assertEqual(1868344, os.path.getsize(os.path.join(dir_name, 'video_1.ts.mp4')))
+            self.assertEqual(1860636, os.path.getsize(os.path.join(dir_name, 'video_2.ts.mp4')))
             self.assertFalse(os.path.exists(downloader._temp_directory_path))
         finally:
             try:

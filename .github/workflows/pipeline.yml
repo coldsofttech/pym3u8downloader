@@ -63,11 +63,33 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pytest
+          pip install pytest-html
           pip install -r requirements.txt
+
+      - name: Set Branch Name (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          $branchName = ${GITHUB_REF##*/}
+          Write-Host "Branch Name: $branchName"
+          Write-Host "BRANCH_NAME=$branchName" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Set Branch Name (Ubuntu and macOS)
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
+        run: |
+          BRANCH_NAME=${GITHUB_REF##*/}
+          echo "Branch name: $BRANCH_NAME"
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
 
       - name: Run Tests
         run: |
-          pytest tests -vv -rEPW -o pytest_collection_order=alphabetical --cache-clear --color=yes
+          pytest tests -vv -rEPW -o pytest_collection_order=alphabetical --cache-clear --color=yes --html=pytest_results.html --self-contained-html
+
+      - name: Upload Report
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-${{ matrix.os }}-${{ matrix.python-version }}
+          path: pytest_results.html
 
   build:
     name: Build
