@@ -69,12 +69,14 @@ class UtilityClass:
         :type file_name: str
         """
         import requests
+        from urllib3.exceptions import InsecureRequestWarning # Module
 
         validate_type(url, str, 'url should be a string.')
         validate_type(file_name, str, 'file_name should be a string.')
 
         try:
-            response = requests.get(url)
+            requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning) ## Disable SSL Warning
+            response = requests.get(url, verify=False) # Skipp SSL
             if response.status_code == 200:
                 with open(file_name, 'wb') as downloaded_file:
                     downloaded_file.write(response.content)
@@ -470,7 +472,13 @@ class M3U8Downloader:
             with open(playlist_file_path, 'r') as playlist_files:
                 for file_line in playlist_files:
                     file_line = file_line.strip().replace('file ', '')
-                    file_path = os.path.join(self._temp_directory_path, file_line)
+                    file_path = os.path.join(self._temp_directory_path, file_line) 
+
+
+                    if not os.path.isfile(file_path): # Skip missing files or handle the error as needed
+                        self._debug_logger.debug(f'Error Missing TS Files!! {file_path}') if self._debug else None # Logg
+                        continue
+
                     with open(file_path, 'rb') as input_file:
                         output_file.write(input_file.read())
 
@@ -549,6 +557,7 @@ class M3U8Downloader:
         :type files: TextIO
         """
         import requests
+
 
         validate_type(sequence, int, 'sequence should be an integer.')
         validate_type(url, str, 'url should be a string.')
