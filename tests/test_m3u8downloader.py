@@ -538,6 +538,69 @@ class TestM3U8Downloader(unittest.TestCase):
             except FileNotFoundError:
                 pass
 
+    def test_download_playlist_with_local_http(self):
+        """Test if download playlist works as expected"""
+        self.input_file_path = 'http://localhost:8000/files/index.m3u8'
+        downloader = M3U8Downloader(self.input_file_path, self.output_file_path_with_mp4, True)
+        try:
+            output_buffer = io.StringIO()
+            sys.stdout = output_buffer
+            self.assertTrue(downloader.skip_space_check)
+            downloader.download_playlist()
+            sys.stdout = sys.__stdout__
+            self.assertTrue(downloader.is_download_complete)
+            self.assertNotIn('Verify', output_buffer.getvalue())
+            self.assertIn('Download', output_buffer.getvalue())
+            self.assertIn('Build', output_buffer.getvalue())
+            self.assertTrue(os.path.exists(self.output_file_path_with_mp4))
+            self.assertEqual(5589428, os.path.getsize(self.output_file_path_with_mp4))
+            self.assertFalse(os.path.exists(downloader._temp_directory_path))
+        finally:
+            try:
+                downloader._remove_temp_directory()
+            except FileNotFoundError:
+                pass
+
+    def test_download_playlist_with_invalid_https(self):
+        """Test if download playlist works as expected"""
+        self.input_file_path = 'https://localhost:8001/files/index.m3u8'
+        downloader = M3U8Downloader(self.input_file_path, self.output_file_path_with_mp4, True)
+        try:
+            output_buffer = io.StringIO()
+            sys.stdout = output_buffer
+            self.assertTrue(downloader.skip_space_check)
+            with self.assertRaises(M3U8DownloaderError):
+                downloader.download_playlist()
+            sys.stdout = sys.__stdout__
+        finally:
+            try:
+                downloader._remove_temp_directory()
+            except FileNotFoundError:
+                pass
+
+    def test_download_playlist_with_invalid_https_skip_ssl_check(self):
+        """Test if download playlist works as expected"""
+        self.input_file_path = 'https://localhost:8001/files/index.m3u8'
+        downloader = M3U8Downloader(self.input_file_path, self.output_file_path_with_mp4, True, verify_ssl=False)
+        try:
+            output_buffer = io.StringIO()
+            sys.stdout = output_buffer
+            self.assertTrue(downloader.skip_space_check)
+            downloader.download_playlist()
+            sys.stdout = sys.__stdout__
+            self.assertTrue(downloader.is_download_complete)
+            self.assertNotIn('Verify', output_buffer.getvalue())
+            self.assertIn('Download', output_buffer.getvalue())
+            self.assertIn('Build', output_buffer.getvalue())
+            self.assertTrue(os.path.exists(self.output_file_path_with_mp4))
+            self.assertEqual(5589428, os.path.getsize(self.output_file_path_with_mp4))
+            self.assertFalse(os.path.exists(downloader._temp_directory_path))
+        finally:
+            try:
+                downloader._remove_temp_directory()
+            except FileNotFoundError:
+                pass
+
     def test_download_master_playlist_with_no_params(self):
         """Test if download master playlist works as expected"""
         self.input_file_path = f'{CommonClass.get_git_test_parent_url()}/master.m3u8'
@@ -632,6 +695,68 @@ class TestM3U8Downloader(unittest.TestCase):
             self.assertEqual(1860448, os.path.getsize(os.path.join(dir_name, 'video_0.ts.mp4')))
             self.assertEqual(1868344, os.path.getsize(os.path.join(dir_name, 'video_1.ts.mp4')))
             self.assertEqual(1860636, os.path.getsize(os.path.join(dir_name, 'video_2.ts.mp4')))
+            self.assertFalse(os.path.exists(downloader._temp_directory_path))
+        finally:
+            try:
+                downloader._remove_temp_directory()
+            except FileNotFoundError:
+                pass
+
+    def test_download_master_playlist_with_local_http(self):
+        """Test if download master playlist works as expected"""
+        self.input_file_path = 'http://localhost:8000/files/master.m3u8'
+        downloader = M3U8Downloader(self.input_file_path, self.output_file_path_with_mp4)
+        try:
+            output_buffer = io.StringIO()
+            sys.stdout = output_buffer
+            self.assertFalse(downloader.skip_space_check)
+            downloader.download_master_playlist(resolution='960x540')
+            sys.stdout = sys.__stdout__
+            self.assertTrue(downloader.is_download_complete)
+            self.assertIn('Verify', output_buffer.getvalue())
+            self.assertIn('Download', output_buffer.getvalue())
+            self.assertIn('Build', output_buffer.getvalue())
+            self.assertTrue(os.path.exists(self.output_file_path_with_mp4))
+            self.assertEqual(5589428, os.path.getsize(self.output_file_path_with_mp4))
+            self.assertFalse(os.path.exists(downloader._temp_directory_path))
+        finally:
+            try:
+                downloader._remove_temp_directory()
+            except FileNotFoundError:
+                pass
+
+    def test_download_master_playlist_with_invalid_https(self):
+        """Test if download master playlist works as expected"""
+        self.input_file_path = 'https://localhost:8001/files/master.m3u8'
+        downloader = M3U8Downloader(self.input_file_path, self.output_file_path_with_mp4)
+        try:
+            output_buffer = io.StringIO()
+            sys.stdout = output_buffer
+            self.assertFalse(downloader.skip_space_check)
+            with self.assertRaises(M3U8DownloaderError):
+                downloader.download_master_playlist(resolution='960x540')
+        finally:
+            try:
+                downloader._remove_temp_directory()
+            except FileNotFoundError:
+                pass
+
+    def test_download_master_playlist_with_invalid_https_skip_ssl_check(self):
+        """Test if download master playlist works as expected"""
+        self.input_file_path = 'https://localhost:8001/files/master.m3u8'
+        downloader = M3U8Downloader(self.input_file_path, self.output_file_path_with_mp4, verify_ssl=False)
+        try:
+            output_buffer = io.StringIO()
+            sys.stdout = output_buffer
+            self.assertFalse(downloader.skip_space_check)
+            downloader.download_master_playlist(resolution='960x540')
+            sys.stdout = sys.__stdout__
+            self.assertTrue(downloader.is_download_complete)
+            self.assertIn('Verify', output_buffer.getvalue())
+            self.assertIn('Download', output_buffer.getvalue())
+            self.assertIn('Build', output_buffer.getvalue())
+            self.assertTrue(os.path.exists(self.output_file_path_with_mp4))
+            self.assertEqual(5589428, os.path.getsize(self.output_file_path_with_mp4))
             self.assertFalse(os.path.exists(downloader._temp_directory_path))
         finally:
             try:

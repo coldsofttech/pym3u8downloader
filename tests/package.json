@@ -1,0 +1,15 @@
+{
+  "name": "pym3u8downloader-local-server",
+  "version": "0.1.0",
+  "description": "Local HTTP/s server for pym3u8downloader tests",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "coldsofttech",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
