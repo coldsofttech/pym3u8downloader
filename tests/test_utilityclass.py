@@ -6,7 +6,7 @@ from unittest.mock import patch
 import requests
 
 from commonclass import CommonClass
-from pym3u8downloader.__main__ import UtilityClass
+from pym3u8downloader.utility_class import UtilityClass
 
 
 class TestUtilityClass(unittest.TestCase):
