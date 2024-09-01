@@ -5,7 +5,7 @@ version, which is currently:
 
 | Version | Supported          |
 |---------|--------------------|
-| 0.1.7   | :white_check_mark: |
+| 0.1.8   | :white_check_mark: |
 
 If you are using an older version, we highly recommend upgrading to the latest version to ensure you have the latest
 security updates.

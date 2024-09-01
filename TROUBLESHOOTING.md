@@ -7,7 +7,7 @@ This document provides comprehensive guidance on troubleshooting issues related 
 **Error Message:**
 
 ```html
-pym3u8downloader.__main__.M3U8DownloaderError: Internet connection required.
+pym3u8downloader.exceptions.M3U8DownloaderError: Internet connection required.
 ```
 
 **Description:**
@@ -24,7 +24,7 @@ To resolve this issue, ensure that you are connected to the internet and then re
 **Error Message:**
 
 ```html
-pym3u8downloader.__main__.M3U8DownloaderError: Identified file "***" as master playlist. Please use "download_master_playlist" instead.
+pym3u8downloader.exceptions.M3U8DownloaderError: Identified file "***" as master playlist. Please use "download_master_playlist" instead.
 ```
 
 **Description:**
@@ -52,7 +52,7 @@ downloader.download_master_playlist(name='720', bandwidth='2048', resolution='12
 **Error Message:**
 
 ```html
-pym3u8downloader.__main__.M3U8DownloaderError: Identified file "***" as playlist. Please use "download_playlist" instead.
+pym3u8downloader.exceptions.M3U8DownloaderError: Identified file "***" as playlist. Please use "download_playlist" instead.
 ```
 
 **Description:**
@@ -80,7 +80,7 @@ downloader.download_playlist()
 **Error Message:**
 
 ```html
-pym3u8downloader.__main__.M3U8DownloaderError: File "***" is not identified as either playlist or master.
+pym3u8downloader.exceptions.M3U8DownloaderError: File "***" is not identified as either playlist or master.
 ```
 
 **Description:**
@@ -97,7 +97,7 @@ file link from someone else, contact them to ensure that they provide the correc
 **Error Message:**
 
 ```html
-pym3u8downloader.__main__.M3U8DownloaderError: Unable to download "***" file.
+pym3u8downloader.exceptions.M3U8DownloaderError: Unable to download "***" file.
 ```
 
 **Description:**
@@ -114,14 +114,8 @@ check that the file is accessible. Reattempt the download once these conditions 
 **Error Message:**
 
 ```html
-UserWarning: Identified * variants in the master playlist. To download the desired playlist, please provide additional parameters, such as NAME, BANDWIDTH, or RESOLUTION, to identify the specific variant.
+pym3u8downloader.exceptions.M3U8DownloaderWarning: Identified * variants in the master playlist. To download the desired playlist, please provide additional parameters, such as NAME, BANDWIDTH, or RESOLUTION, to identify the specific variant.
 For example: use "download_master_playlist(name='720', bandwidth='2149280', resolution='1280x720')".
-
-You can view the available options using the following list:
-[
-{'bandwidth': '***', 'name': '***', 'resolution': '***'},
-...
-]
 ```
 
 **Description:**
@@ -132,13 +126,13 @@ package analyzes the master playlist and lists all available variants to assist 
 
 **Solution:**
 
-Review the list of available variants provided in the warning message. Choose the appropriate values for name,
-bandwidth, and resolution, and then provide these parameters to download the desired video segments.
+Review the list of available variants provided in the JSON-formatted return data. Choose the appropriate values for
+name, bandwidth, and resolution, and then provide these parameters to download the desired video segments.
 
 **Error Message:**
 
 ```html
-pym3u8downloader.__main__.M3U8DownloaderError: Selected variant, name="***", bandwidth="***", resolution="***" not found.
+pym3u8downloader.exceptions.M3U8DownloaderError: Selected variant, name="***", bandwidth="***", resolution="***" not found.
 ```
 
 **Description:**

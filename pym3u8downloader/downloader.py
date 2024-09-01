@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import shutil
@@ -7,7 +8,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import Optional, TextIO, Union
 
-from pym3u8downloader.exceptions import M3U8DownloaderError
+from pym3u8downloader.exceptions import M3U8DownloaderError, M3U8DownloaderWarning
 from pym3u8downloader.utility_class import UtilityClass
 from pym3u8downloader.validations import validate_type
 
@@ -830,23 +831,14 @@ class M3U8Downloader:
                     {k: v for k, v in variant.items() if k != 'uri'}
                     for variant in variants
                 ]
-                formatted_variants = '[\n'
-                for variant in display_variants:
-                    formatted_variant = '     {'
-                    for key, value in variant.items():
-                        formatted_variant += f"'{key}': '{value}', "
-                    formatted_variant = formatted_variant.rstrip(', ')
-                    formatted_variant += '},\n'
-                    formatted_variants += formatted_variant
-                formatted_variants = formatted_variants.rstrip(',\n') + '\n]'
+                formatted_variants = json.dumps(display_variants, indent=4)
 
-                raise UserWarning(
-                    f'Identified {len(variants)} variants in the master playlist. '
-                    f'To download the desired playlist, please provide additional parameters, such as NAME, BANDWIDTH, '
-                    f'or RESOLUTION, to identify the specific variant.'
-                    f'\nFor example: use "download_master_playlist(name=\'720\', bandwidth=\'2149280\', '
-                    f'resolution=\'1280x720\')".\n\n'
-                    f'You can view the available options using the following list: \n{formatted_variants}'
+                raise M3U8DownloaderWarning(
+                    message=f'Identified {len(variants)} variants in the master playlist. To download the desired '
+                            f'playlist, please provide additional parameters, such as NAME, BANDWIDTH, or RESOLUTION, '
+                            f'to identify the specific variant.\nFor example: use "download_master_playlist('
+                            f'name=\'720\', bandwidth=\'2149280\', resolution=\'1280x720\')".',
+                    json_data=json.loads(formatted_variants)
                 )
             else:
                 selected_variant = self._search_playlist(variants, name, bandwidth, resolution)

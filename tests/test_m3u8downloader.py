@@ -6,6 +6,7 @@ import unittest
 
 from commonclass import CommonClass
 from pym3u8downloader import M3U8Downloader, M3U8DownloaderError
+from pym3u8downloader.exceptions import M3U8DownloaderWarning
 
 
 class TestM3U8Downloader(unittest.TestCase):
@@ -606,8 +607,10 @@ class TestM3U8Downloader(unittest.TestCase):
         self.input_file_path = f'{CommonClass.get_git_test_parent_url()}/master.m3u8'
         downloader = M3U8Downloader(self.input_file_path, self.output_file_path)
         try:
-            with self.assertRaises(UserWarning):
+            with self.assertRaises(M3U8DownloaderWarning) as w:
                 downloader.download_master_playlist()
+                self.assertIsNotNone(w.json_data)
+                self.assertGreater(len(w.json_data), 0)
         finally:
             try:
                 downloader._remove_temp_directory()

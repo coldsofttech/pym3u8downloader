@@ -73,11 +73,22 @@ downloader.download_master_playlist(name='720')
 
 ### `M3U8DownloaderError`
 
-This error class is employed to signal any issues or errors encountered during the execution of M3U8Downloader methods.
+This error class is employed to signal any issues or errors encountered during the execution of `M3U8Downloader`
+methods.
 
 #### Constructors
 
 - `M3U8DownloaderError(message: str)`: Initialize a M3U8DownloaderError.
+
+### `M3U8DownloaderWarning`
+
+This warning class is employed to signal any issues encountered during the execution of the `download_master_playlist`
+method of the `M3U8Downloader` class, especially when no parameters are passed. Along with the warning message,
+the `json_data` variable is returned with all available resolution formats (variants) in JSON-structured format.
+
+#### Constructors
+
+- `M3U8DownloaderWarning(message: str, json_data: Optional[list] = None)`: Initialize a M3U8DownloaderWarning.
 
 # Troubleshooting Guide
 
