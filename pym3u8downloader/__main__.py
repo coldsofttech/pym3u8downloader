@@ -7,6 +7,7 @@ import string
 import sys
 import tempfile
 import time
+import warnings
 from concurrent.futures import ThreadPoolExecutor
 from typing import Optional, TextIO, Union
 from urllib.parse import urlparse
@@ -59,7 +60,7 @@ class UtilityClass:
         return mount_point1 == mount_point2
 
     @staticmethod
-    def download_file(url: str, file_name: str) -> None:
+    def download_file(url: str, file_name: str, verify_ssl: bool = True) -> None:
         """
         Download a file from a URL and save it to disk.
 
@@ -67,16 +68,21 @@ class UtilityClass:
         :type url: str
         :param file_name: The name of the file to save.
         :type file_name: str
+        :param verify_ssl: A flag to verify SSL for https-based input URLs
+        :type verify_ssl: bool
         """
         import requests
-        from urllib3.exceptions import InsecureRequestWarning # Module
 
         validate_type(url, str, 'url should be a string.')
         validate_type(file_name, str, 'file_name should be a string.')
+        validate_type(verify_ssl, bool, 'verify_ssl should be a boolean.')
+
+        parsed_url = urlparse(url)
+        if not verify_ssl and parsed_url.scheme == 'https':
+            warnings.filterwarnings('ignore', message='Unverified HTTPS request')
 
         try:
-            requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning) ## Disable SSL Warning
-            response = requests.get(url, verify=False) # Skipp SSL
+            response = requests.get(url, verify=verify_ssl)
             if response.status_code == 200:
                 with open(file_name, 'wb') as downloaded_file:
                     downloaded_file.write(response.content)
@@ -240,6 +246,7 @@ class M3U8Downloader:
     _debug = False
     _debug_file_path = None
     _debug_logger = None
+    _verify_ssl = True
     _input_file_path = None
     _output_file_path = None
     _skip_space_check = False
@@ -253,7 +260,8 @@ class M3U8Downloader:
             skip_space_check: Optional[bool] = False,
             debug: Optional[bool] = False,
             debug_file_path: Optional[str] = 'debug.log',
-            max_threads: Optional[int] = 10
+            max_threads: Optional[int] = 10,
+            verify_ssl: Optional[bool] = True
     ) -> None:
         """
         Initializes the M3U8Downloader object with the specified parameters.
@@ -270,6 +278,8 @@ class M3U8Downloader:
         :type debug_file_path: str
         :param max_threads: The maximum number of threads that can be executed in parallel. Defaults to 10.
         :type max_threads: int
+        :param verify_ssl: A flag to verify SSL for https-based URLs.
+        :type verify_ssl: bool
         """
         validate_type(input_file_path, str, 'input_file_path should be a string.')
         validate_type(output_file_path, str, 'output_file_path should be a string.')
@@ -277,6 +287,7 @@ class M3U8Downloader:
         validate_type(debug, bool, 'debug should be a boolean.')
         validate_type(debug_file_path, str, 'debug_file_path should be a string.')
         validate_type(max_threads, int, 'max_threads should be an integer.')
+        validate_type(verify_ssl, bool, 'verify_ssl should be a boolean.')
 
         self._max_threads = max_threads
         self._debug = debug
@@ -288,6 +299,8 @@ class M3U8Downloader:
         self._debug_logger.debug(f'Output File Path: {self._output_file_path}') if self._debug else None
         self._skip_space_check = skip_space_check
         self._debug_logger.debug(f'Skip Space Check: {self._skip_space_check}') if self._debug else None
+        self._verify_ssl = verify_ssl
+        self._debug_logger.debug(f'Verify SSL: {self._verify_ssl}') if self._debug else None
         self._index_file_name = ''
         self._parent_url = ''
         self._playlist_files = []
@@ -424,6 +437,27 @@ class M3U8Downloader:
         self._max_threads = value
 
     @property
+    def verify_ssl(self) -> bool:
+        """
+        Getter property for the verify SSL flag.
+
+        :return: A flag to indicate verify SSL for https-based input URLs.
+        :rtype: bool
+        """
+        return self._verify_ssl
+
+    @verify_ssl.setter
+    def verify_ssl(self, value: bool) -> None:
+        """
+        Setter property for the verify SSL flag.
+
+        :param value: A flag to indicate verify SSL for https-based input URLs.
+        :type value: bool
+        """
+        validate_type(value, bool, 'verify_ssl should be a boolean.')
+        self._verify_ssl = value
+
+    @property
     def is_download_complete(self) -> bool:
         """
         Getter property for the download completion status.
@@ -474,9 +508,8 @@ class M3U8Downloader:
                     file_line = file_line.strip().replace('file ', '')
                     file_path = os.path.join(self._temp_directory_path, file_line) 
 
-
-                    if not os.path.isfile(file_path): # Skip missing files or handle the error as needed
-                        self._debug_logger.debug(f'Error Missing TS Files!! {file_path}') if self._debug else None # Logg
+                    if not os.path.isfile(file_path):  # Skip missing files or handle the error as needed
+                        self._debug_logger.debug(f'Error Missing TS Files!! {file_path}') if self._debug else None
                         continue
 
                     with open(file_path, 'rb') as input_file:
@@ -567,7 +600,7 @@ class M3U8Downloader:
             files.write(f'file {file_name}\n')
             file_path = os.path.join(self._temp_directory_path, file_name)
             self._debug_logger.debug(f'Download File Path: {file_path}') if self._debug else None
-            UtilityClass.download_file(url, file_path)
+            UtilityClass.download_file(url, file_path, self._verify_ssl)
             self._debug_logger.debug(f'{file_path} downloaded') if self._debug else None
         except requests.RequestException as e:
             self._debug_logger.debug(f'Download error. {e}') if self._debug else None
@@ -615,7 +648,7 @@ class M3U8Downloader:
         try:
             index_file_path = os.path.join(self._temp_directory_path, 'index.m3u8')
             self._debug_logger.debug(f'Index File Path: {index_file_path}') if self._debug else None
-            UtilityClass.download_file(self._input_file_path, index_file_path)
+            UtilityClass.download_file(self._input_file_path, index_file_path, self._verify_ssl)
             self._debug_logger.debug('Index file downloaded') if self._debug else None
             return True
         except requests.RequestException as e:

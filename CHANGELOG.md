@@ -1,6 +1,7 @@
 # Version History
 
-- 0.1.5: Introduced Support for Master Playlist (latest)
+- 0.1.6: Fixed bug with SSL error (latest)
+- 0.1.5: Introduced Support for Master Playlist
 - 0.1.4: Added Additional Files Required for Master Playlist Tests
 - 0.1.3: Fixed Issues: 4, 5, 6, 7, and 10
 - 0.1.2: Updated Pipeline To Support Multi-OS & Added Support for PyPI Release

@@ -43,7 +43,7 @@ downloader.download_master_playlist(name='720')
 
 #### Constructors
 
-- `M3U8Downloader(input_file_path: str, output_file_path: str, skip_space_check: Optional[bool] = False, debug: Optional[bool] = False, debug_file_path: Optional[str] = 'debug.log', max_threads: Optional[int] = 10)`:
+- `M3U8Downloader(input_file_path: str, output_file_path: str, skip_space_check: Optional[bool] = False, debug: Optional[bool] = False, debug_file_path: Optional[str] = 'debug.log', max_threads: Optional[int] = 10, verify_ssl: Optional[bool] = True)`:
   Initializes the M3U8Downloader object with the specified parameters.
 
 #### Methods
@@ -68,6 +68,8 @@ downloader.download_master_playlist(name='720')
 - `debug_file_path`: Getter/setter property for the debug file path.
 - `max_threads`: Getter/setter property for the maximum number of threads that can be executed in parallel.
 - `is_download_complete`: Getter property for the download completion status.
+- `verify_ssl`: Getter/setter property for the verify SSL flag. This helps skip SSL warnings for HTTPS-based URLs.
+  Defaults to True.
 
 ### `M3U8DownloaderError`
 
