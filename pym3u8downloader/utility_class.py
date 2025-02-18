@@ -139,7 +139,8 @@ class UtilityClass:
        :rtype: bool
        """
         validate_type(value, str, 'value should be a string.')
-        return value.endswith('.m3u8')
+        parsed_url = urlparse(value)
+        return parsed_url.path.endswith('.m3u8')
 
     @staticmethod
     def is_space_available(folder_path: str, required: int) -> bool:
