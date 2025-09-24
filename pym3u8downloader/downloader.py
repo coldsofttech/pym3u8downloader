@@ -7,6 +7,7 @@ import tempfile
 import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import Optional, TextIO, Union
+from threading import Lock
 
 from pym3u8downloader.exceptions import M3U8DownloaderError, M3U8DownloaderWarning
 from pym3u8downloader.utility_class import UtilityClass
@@ -83,6 +84,7 @@ class M3U8Downloader:
         self._index_file_name = ''
         self._parent_url = ''
         self._playlist_files = []
+        self._playlist_files_lock = Lock()
 
     @property
     def input_file_path(self) -> str:
@@ -375,7 +377,8 @@ class M3U8Downloader:
 
         try:
             file_name = f'file{sequence}.mp4'
-            files.write(f'file {file_name}\n')
+            with self._playlist_files_lock:
+                files.write(f'file {file_name}\n')
             file_path = os.path.join(self._temp_directory_path, file_name)
             self._debug_logger.debug(f'Download File Path: {file_path}') if self._debug else None
             UtilityClass.download_file(url, file_path, self._verify_ssl)
