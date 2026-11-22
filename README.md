@@ -1,5 +1,13 @@
 # `pym3u8downloader`
 
+> [!WARNING]
+> **This project is archived and no longer maintained.**
+> It has been replaced by [**RayoHX**](https://github.com/coldsofttech/RayoHX), which is the actively developed
+> successor. Please switch to RayoHX for new features, fixes and support. This package stays available on PyPI
+> as-is, but will not receive further updates.
+>
+> Moving over? See the [migration guide](https://github.com/coldsofttech/RayoHX/blob/main/packages/core/docs/guides/migration.md).
+
 M3U8 Downloader is a Python class designed to download and concatenate video files from M3U8 playlists, including master
 playlists. This class offers comprehensive functionality for managing M3U8 playlist files, downloading video segments,
 optionally combining them into a single video file, and handling various error conditions.

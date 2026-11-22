@@ -21,7 +21,7 @@ setup(
     long_description_content_type='text/markdown',
     keywords=["m3u8-playlist", "m3u8", "m3u8-downloader"],
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 7 - Inactive",
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Multimedia :: Video",
