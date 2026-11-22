@@ -1,6 +1,7 @@
 # Version History
 
-- 0.1.8: Updated "download_master_playlist" to return JSON-formatted available resolutions (latest)
+- 0.1.9: Project archived; please move to [RayoHX](https://github.com/coldsofttech/RayoHX) (latest)
+- 0.1.8: Updated "download_master_playlist" to return JSON-formatted available resolutions
 - 0.1.7: Restructured Code + Add. Test Cases
 - 0.1.6: Fixed bug with SSL error
 - 0.1.5: Introduced Support for Master Playlist

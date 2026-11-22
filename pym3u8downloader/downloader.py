@@ -5,6 +5,7 @@ import shutil
 import sys
 import tempfile
 import time
+import warnings
 from concurrent.futures import ThreadPoolExecutor
 from typing import Optional, TextIO, Union
 
@@ -60,6 +61,12 @@ class M3U8Downloader:
         :param verify_ssl: A flag to verify SSL for https-based URLs.
         :type verify_ssl: bool
         """
+        warnings.warn(
+            'pym3u8downloader is archived and no longer maintained. '
+            'Please migrate to RayoHX: https://github.com/coldsofttech/RayoHX',
+            DeprecationWarning,
+            stacklevel=2
+        )
         validate_type(input_file_path, str, 'input_file_path should be a string.')
         validate_type(output_file_path, str, 'output_file_path should be a string.')
         validate_type(skip_space_check, bool, 'skip_space_check should be a boolean.')
